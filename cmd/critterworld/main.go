@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/FooWho/critterworld/internal/parser"
 )
 
 func main() {
-	header, source := parser.ReadCritterSource("critter1.crtr")
+	header, source, err := parser.ReadCritterSource("critter1.crtr")
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println("======================================")
 	fmt.Print(header)
 	fmt.Println("======================================")
@@ -15,12 +19,12 @@ func main() {
 	fmt.Println("======================================")
 
 	lexer := parser.NewLexer(source)
+	tokens, err := lexer.Tokenize()
+	if err != nil {
+		fmt.Printf("Error is: %v\n", err)
+	}
+	for _, token := range tokens {
 
-	for {
-		token := lexer.NextToken()
-		if token == nil {
-			break
-		}
 		fmt.Printf("Token Type: %-12s | Value: %s\n", token.Type, token.Lexeme)
 	}
 }

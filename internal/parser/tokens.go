@@ -6,6 +6,7 @@ import (
 
 //go:generate stringer -type=Token
 
+// The Type field a LexedToken will be one of the following Token constants.
 type Token int
 
 const (
@@ -59,11 +60,6 @@ const (
 	T_MISMATCH
 	T_NONE
 )
-
-type LexedToken struct {
-	Type   Token
-	Lexeme string
-}
 
 var lexerRules = []TokenRule{
 	{Type: T_MEMSIZE, Lexeme: "MEMSIZE", Regex: regexp.MustCompile(`^\bMEMSIZE\b`)},
