@@ -39,9 +39,10 @@ func (p *Program) Clone() ASTNode {
 	var cloneP = Program{}
 
 	for _, rule := range p.Rules {
-		cloneR, ok := rule.Clone().(*Rule)
+		clonedNode := rule.Clone()
+		cloneR, ok := clonedNode.(*Rule)
 		if !ok {
-			panic(fmt.Sprintf("critterworld: invariant violation: expected *Rule in (p *Program).Clone, got %T", cloneR))
+			panic(fmt.Sprintf("critterworld: invariant violation: expected *Rule in (p *Program).Clone(), got %T", clonedNode))
 		}
 		cloneP.addRule(cloneR)
 	}
@@ -49,20 +50,60 @@ func (p *Program) Clone() ASTNode {
 }
 
 type Rule struct {
+	Condition BooleanOperator
+	Commands  []Command
 }
 
 func (r *Rule) Type() string {
-	return ""
+	return "Rule"
 }
 
 func (r *Rule) Children() []ASTNode {
-	return nil
+	children := make([]ASTNode, len(r.Commands)+1)
+	children[0] = r.Condition
+	for i, command := range r.Commands {
+		children[i+1] = command
+	}
+	return children
 }
 
 func (r *Rule) Clone() ASTNode {
 	return nil
 }
 
+type BooleanOperator interface {
+	ASTNode
+	Evaluate() bool
+}
+
+type LogicalOperator struct {
+}
+
+func (lo *LogicalOperator) Type() string {
+	return ""
+}
+
+func (lo *LogicalOperator) Children() []ASTNode {
+	return nil
+}
+
+func (lo *LogicalOperator) Clone() ASTNode {
+	return nil
+}
+
+func (lo *LogicalOperator) Evaluate() bool {
+	return true
+}
+
+type Command interface {
+	ASTNode
+	IsCommand() bool
+}
+
 var test Program = Program{}
 
 var _ ASTNode = &test
+
+var test2 = LogicalOperator{}
+var _ BooleanOperator = &test2
+var _ ASTNode = &test2
