@@ -25,6 +25,6 @@ func main() {
 	}
 	for _, token := range tokens {
 
-		fmt.Printf("Token Type: %-12s | Value: %s\n", token.Type, token.Lexeme)
+		fmt.Printf("Token Type: %-12s | Value: %s\n", token.TokenType, token.Lexeme)
 	}
 }

@@ -11,16 +11,16 @@ import (
 // TokenRule holds a token identifier, the canonical lexeme for the token, and the
 // regular expression used by the lexer to match the token.
 type TokenRule struct {
-	Type   Token
-	Lexeme string
-	Regex  *regexp.Regexp
+	TokenType Token
+	Lexeme    string
+	Regex     *regexp.Regexp
 }
 
 // LexedToken is the output of the lexer. The lexer performs the lexical analysis
 // on a string and emits the tokens that were identified.
 type LexedToken struct {
-	Type   Token
-	Lexeme string
+	TokenType Token
+	Lexeme    string
 }
 
 // Lexer is the representation of the lexer state. It contains the TokenRules, the input to
@@ -93,7 +93,7 @@ func (l *Lexer) Tokenize() ([]*LexedToken, error) {
 	for {
 		token, err := l.nextToken()
 		if err != nil {
-			if token.Type != T_MISMATCH {
+			if token.TokenType != T_MISMATCH {
 				return tokens, err
 			} else {
 				tokens = append(tokens, token)
@@ -124,14 +124,14 @@ func (l *Lexer) nextToken() (*LexedToken, error) {
 			match := subInput[loc[0]:loc[1]]
 			l.cursor += len(match)
 
-			if rule.Type == T_WS || rule.Type == T_COMMENT {
+			if rule.TokenType == T_WS || rule.TokenType == T_COMMENT {
 				tok, err := l.nextToken()
 				return tok, err
 			}
-			if rule.Type == T_MISMATCH {
-				return &LexedToken{Type: rule.Type, Lexeme: match}, fmt.Errorf("Unknown token at index: %d: %q", l.cursor, subInput[0])
+			if rule.TokenType == T_MISMATCH {
+				return &LexedToken{TokenType: rule.TokenType, Lexeme: match}, fmt.Errorf("Unknown token at index: %d: %q", l.cursor, subInput[0])
 			}
-			return &LexedToken{Type: rule.Type, Lexeme: match}, nil
+			return &LexedToken{TokenType: rule.TokenType, Lexeme: match}, nil
 		}
 	}
 	return nil, fmt.Errorf("This should never happen - Unexpected character at index %d: %q", l.cursor, subInput[0])

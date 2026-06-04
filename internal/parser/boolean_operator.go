@@ -6,14 +6,13 @@ import (
 
 type BooleanOperator interface {
 	ASTNode
-	Evaluate() bool
 	IsBooleanOperator() bool
 }
 
 type LogicalOperator struct {
-	operation    LexedToken
-	leftOperand  Expression
-	rightOperand Expression
+	operator     LexedToken
+	leftOperand  BooleanOperator
+	rightOperand BooleanOperator
 }
 
 func (lo *LogicalOperator) NodeType() string {
@@ -29,33 +28,32 @@ func (lo *LogicalOperator) Children() []ASTNode {
 
 func (lo *LogicalOperator) Clone() ASTNode {
 	var ok bool
-	cloneLO := LogicalOperator{}
+	cloneLO := LogicalOperator{operator: lo.operator}
 
 	clonedOperand := lo.leftOperand.Clone()
-	cloneLO.leftOperand, ok = clonedOperand.(Expression)
+	cloneLO.leftOperand, ok = clonedOperand.(BooleanOperator)
 	if !ok {
-		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (lo *LogicalOperator).Clone(), got %T", clonedOperand))
+		panic(fmt.Sprintf("critterworld: invariant violation: expected BooleanOperator in (lo *LogicalOperator).Clone(), got %T", clonedOperand))
 	}
 	clonedOperand = lo.rightOperand.Clone()
-	cloneLO.rightOperand = clonedOperand.(Expression)
+	cloneLO.rightOperand, ok = clonedOperand.(BooleanOperator)
 	if !ok {
-		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (lo *LogicalOperator).Clone(), got %T", clonedOperand))
+		panic(fmt.Sprintf("critterworld: invariant violation: expected BooleanOperator in (lo *LogicalOperator).Clone(), got %T", clonedOperand))
 	}
-	cloneLO.rightOperand, ok = clonedOperand.(Expression)
 
 	return &cloneLO
-}
-
-func (lo *LogicalOperator) Evaluate() bool {
-	return true
 }
 
 func (lo *LogicalOperator) IsBooleanOperator() bool {
 	return true
 }
 
+// Interface guard
+var _ BooleanOperator = (*LogicalOperator)(nil)
+var _ ASTNode = (*LogicalOperator)(nil)
+
 type RelationalOperator struct {
-	operation    LexedToken
+	operator     LexedToken
 	rightOperand Expression
 	leftOperand  Expression
 }
@@ -73,7 +71,7 @@ func (ro *RelationalOperator) Children() []ASTNode {
 
 func (ro *RelationalOperator) Clone() ASTNode {
 	var ok bool
-	cloneRO := LogicalOperator{}
+	cloneRO := RelationalOperator{operator: ro.operator}
 
 	clonedOperand := ro.leftOperand.Clone()
 	cloneRO.leftOperand, ok = clonedOperand.(Expression)
@@ -90,10 +88,10 @@ func (ro *RelationalOperator) Clone() ASTNode {
 	return &cloneRO
 }
 
-func (ro *RelationalOperator) Evaluate() bool {
-	return true
-}
-
 func (ro *RelationalOperator) IsBooleanOperator() bool {
 	return true
 }
+
+// Interface guard
+var _ BooleanOperator = (*RelationalOperator)(nil)
+var _ ASTNode = (*RelationalOperator)(nil)

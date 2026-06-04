@@ -104,8 +104,8 @@ func TestTokenize(t *testing.T) {
 
 			// Verify Individual Tokens (Type and Lexeme)
 			for i, expected := range tt.expectedTokens {
-				if tokens[i].Type != expected.Type {
-					t.Errorf("token[%d]: expected type %v, got %v", i, expected.Type, tokens[i].Type)
+				if tokens[i].TokenType != expected.Type {
+					t.Errorf("token[%d]: expected type %v, got %v", i, expected.Type, tokens[i].TokenType)
 				}
 				if tokens[i].Lexeme != expected.Lexeme {
 					t.Errorf("token[%d]: expected lexeme %q, got %q", i, expected.Lexeme, tokens[i].Lexeme)

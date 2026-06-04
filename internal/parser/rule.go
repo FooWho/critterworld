@@ -40,3 +40,6 @@ func (r *Rule) Clone() ASTNode {
 	}
 	return rClone
 }
+
+// Interface guard
+var _ ASTNode = (*Rule)(nil)

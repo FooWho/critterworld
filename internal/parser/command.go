@@ -10,8 +10,8 @@ type Command interface {
 }
 
 type Update struct {
-	destination ASTNode
-	source      ASTNode
+	destination *MemNode
+	source      Expression
 }
 
 func (u *Update) NodeType() string {
@@ -30,9 +30,9 @@ func (u *Update) Clone() ASTNode {
 	uClone := Update{}
 
 	clonedDestination := u.destination.Clone()
-	uClone.destination, ok = clonedDestination.(Expression)
+	uClone.destination, ok = clonedDestination.(*MemNode)
 	if !ok {
-		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (ro *RelationalOperator).Clone(), got %T", clonedDestination))
+		panic(fmt.Sprintf("critterworld: invariant violation: expected *MemNode in (u *Update).Clone(), got %T", clonedDestination))
 	}
 
 	clonedSource := u.source.Clone()
@@ -47,6 +47,10 @@ func (u *Update) Clone() ASTNode {
 func (u *Update) IsCommand() bool {
 	return true
 }
+
+// Interface guard
+var _ Command = (*Update)(nil)
+var _ ASTNode = (*Update)(nil)
 
 type ActionInterface interface {
 	Command
@@ -66,7 +70,9 @@ func (act *Action) Children() []ASTNode {
 }
 
 func (act *Action) Clone() ASTNode {
-	return nil
+	actClone := Action{}
+	actClone.actionType = act.actionType
+	return &actClone
 }
 
 func (act *Action) IsCommand() bool {
@@ -76,6 +82,11 @@ func (act *Action) IsCommand() bool {
 func (act *Action) IsAction() bool {
 	return true
 }
+
+// Interface guard
+var _ Command = (*Action)(nil)
+var _ ActionInterface = (*Action)(nil)
+var _ ASTNode = (*Action)(nil)
 
 type ServeAction struct {
 	Action
@@ -87,11 +98,20 @@ func (act *ServeAction) NodeType() string {
 }
 
 func (act *ServeAction) Children() []ASTNode {
-	return nil
+	children := make([]ASTNode, 1)
+	children[0] = act.operand
+	return children
 }
 
 func (act *ServeAction) Clone() ASTNode {
-	return nil
+	var ok bool
+	actClone := ServeAction{}
+	clonedOperand := act.operand.Clone()
+	actClone.operand, ok = clonedOperand.(Expression)
+	if !ok {
+		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (act *ServeAction).Clone(), got %T", clonedOperand))
+	}
+	return &actClone
 }
 
 func (act *ServeAction) IsCommand() bool {
@@ -105,3 +125,8 @@ func (act *ServeAction) IsAction() bool {
 func (act *ServeAction) isExpression() bool {
 	return true
 }
+
+// Interface guard
+var _ Command = (*ServeAction)(nil)
+var _ ActionInterface = (*ServeAction)(nil)
+var _ ASTNode = (*ServeAction)(nil)
