@@ -48,6 +48,31 @@ func (lo *LogicalOperator) IsBooleanOperator() bool {
 	return true
 }
 
+func (lo *LogicalOperator) String() string {
+	var str string
+	if lo.breakingPrecedence(lo.leftOperand) {
+		str += fmt.Sprintf("{%s}", lo.leftOperand)
+	} else {
+		str += fmt.Sprintf("%s", lo.leftOperand)
+	}
+	str += " " + lo.operator.Lexeme + " "
+	if lo.breakingPrecedence(lo.rightOperand) {
+		str += fmt.Sprintf("{%s}", lo.rightOperand)
+	} else {
+		str += fmt.Sprintf("%s", lo.rightOperand)
+	}
+	return str
+}
+
+func (lo *LogicalOperator) breakingPrecedence(operand BooleanOperator) bool {
+	if operand.NodeType() == "LogicalOperator" &&
+		lo.operator.TokenType == tAnd &&
+		operand.(*LogicalOperator).operator.TokenType == tOr {
+		return true
+	}
+	return false
+}
+
 // Interface guard
 var _ BooleanOperator = (*LogicalOperator)(nil)
 var _ ASTNode = (*LogicalOperator)(nil)
@@ -85,6 +110,10 @@ func (ro *RelationalOperator) Clone() ASTNode {
 	}
 
 	return &cloneRO
+}
+
+func (ro *RelationalOperator) String() string {
+	return fmt.Sprintf("%s %s %s", ro.leftOperand, ro.operator, ro.rightOperand)
 }
 
 func (ro *RelationalOperator) IsBooleanOperator() bool {

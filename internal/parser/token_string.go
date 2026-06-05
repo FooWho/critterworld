@@ -10,7 +10,7 @@ func _() {
 	var x [1]struct{}
 	_ = x[tMemSize-0]
 	_ = x[tDefense-1]
-	_ = x[TOffense-2]
+	_ = x[tOffense-2]
 	_ = x[tSize-3]
 	_ = x[tEnergy-4]
 	_ = x[tPass-5]
@@ -59,7 +59,7 @@ func _() {
 	_ = x[tNone-48]
 }
 
-const _Token_name = "tMemSizetDefenseTOffensetSizetEnergytPasstPosturetCommenttCommtAssigntLequtGequtNequtMemtWaittForwardtBackwardtLefttRighttEattAttacktGrowtBudtServetNearbytAheadtRandomtSmelltAndtOrtModtStartDivtPlustMinustLesstGreattEqutLParentRParentLBrackettRBrackettLBracetRBracetSemicolontNumbertWStMismatchtNone"
+const _Token_name = "tMemSizetDefensetOffensetSizetEnergytPasstPosturetCommenttCommtAssigntLequtGequtNequtMemtWaittForwardtBackwardtLefttRighttEattAttacktGrowtBudtServetNearbytAheadtRandomtSmelltAndtOrtModtStartDivtPlustMinustLesstGreattEqutLParentRParentLBrackettRBrackettLBracetRBracetSemicolontNumbertWStMismatchtNone"
 
 var _Token_index = [...]uint16{0, 8, 16, 24, 29, 36, 41, 49, 57, 62, 69, 74, 79, 84, 88, 93, 101, 110, 115, 121, 125, 132, 137, 141, 147, 154, 160, 167, 173, 177, 180, 184, 189, 193, 198, 204, 209, 215, 219, 226, 233, 242, 251, 258, 265, 275, 282, 285, 294, 299}
 

@@ -12,7 +12,7 @@ type Token int
 const (
 	tMemSize Token = iota
 	tDefense
-	TOffense
+	tOffense
 	tSize
 	tEnergy
 	tPass
@@ -64,7 +64,7 @@ const (
 var lexerRules = []TokenRule{
 	{TokenType: tMemSize, Lexeme: "MEMSIZE", Regex: regexp.MustCompile(`^\bMEMSIZE\b`)},
 	{TokenType: tDefense, Lexeme: "DEFENSE", Regex: regexp.MustCompile(`^\bDEFENSE\b`)},
-	{TokenType: TOffense, Lexeme: "OFFENSE", Regex: regexp.MustCompile(`^\bOFFENSE\b`)},
+	{TokenType: tOffense, Lexeme: "OFFENSE", Regex: regexp.MustCompile(`^\bOFFENSE\b`)},
 	{TokenType: tSize, Lexeme: "SIZE", Regex: regexp.MustCompile(`^\bSIZE\b`)},
 	{TokenType: tEnergy, Lexeme: "ENERGY", Regex: regexp.MustCompile(`^\bENERGY\b`)},
 	{TokenType: tPass, Lexeme: "PASS", Regex: regexp.MustCompile(`^\bPASS\b`)},

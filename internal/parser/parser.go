@@ -38,18 +38,52 @@ func (p *Parser) next() *LexedToken {
 	return &LexedToken{tNone, tNone.String()}
 }
 
-func (p *Parser) Parse() *Program {
-	program := &Program{}
-	program.rules = make([]*Rule, 0)
-	for p.cursor < p.tokenCount {
-		rule := p.ParseRule()
-		program.rules = append(program.rules, rule)
+func (p *Parser) Parse() (*Program, error) {
+	var err error
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("parsing failed: %v", r)
+		}
+	}()
+	var program Program
+	for p.peek().TokenType != tNone {
+		program.AddRule(p.ParseRule())
 	}
-	return program
+	return &program, err
 }
 
 func (p *Parser) ParseRule() *Rule {
-	return &Rule{condition: p.ParseCondition()}
+	return &Rule{condition: p.ParseCondition(), commands: p.ParseCommands()}
+}
+
+func (p *Parser) ParseCommands() []Command {
+	if p.next().TokenType != tComm {
+		panic(fmt.Sprintf("critterworld: parse error: expected '-->' in (p *Parser).ParseCommands(), got %s", p.peek().Lexeme))
+	}
+	var commands []Command
+	command := p.ParseCommand()
+	commands = append(commands, command)
+	for p.peek().TokenType != tSemicolon {
+		if command.NodeType() == "Action" || command.NodeType() == "ServeAction" {
+			panic("critterworld: parse error: in (p *Parser).ParseCommands(), got Commands continue after Action")
+		}
+		command = p.ParseCommand()
+		commands = append(commands, command)
+	}
+	_ = p.next()
+	return commands
+}
+
+func (p *Parser) ParseCommand() Command {
+	switch p.peek().TokenType {
+	case tMem, tMemSize, tDefense, tOffense, tEnergy, tPass, tPosture:
+		return p.ParseUpdate()
+	case tForward, tBackward, tLeft, tRight, tEat, tAttack, tGrow, tBud, tServe:
+		return p.ParseAction()
+	default:
+		panic(fmt.Sprintf("critterworld: parse error: in (p *Parser).ParseCommand(), got %s but expected a Command", p.peek().TokenType))
+	}
+
 }
 
 func (p *Parser) ParseCondition() BooleanOperator {
@@ -84,9 +118,6 @@ func (p *Parser) ParseRelation() BooleanOperator {
 	if p.peek().TokenType == tLBrace {
 		_ = p.next()
 		condition := p.ParseCondition()
-		if p.peek().TokenType != tRBrace {
-
-		}
 		if p.next().TokenType != tRBrace {
 			panic(fmt.Sprintf("critterworld: parse error: expected '}' in (p *Parser).ParseRelation(), got %s", p.peek().Lexeme))
 		}
@@ -99,13 +130,8 @@ func (p *Parser) ParseRelation() BooleanOperator {
 		operator.TokenType != tLequ && operator.TokenType != tLess && operator.TokenType != tNequ {
 		panic(fmt.Sprintf("critterworld: parse error: expected RelationalOperator in (p *Parser).ParseRelation(), got %s", p.peek().Lexeme))
 	}
-	switch operator.TokenType {
-	case tGreat, tGequ, tEqu, tLequ, tLess, tNequ:
-		rightOperand := p.ParseExpression()
-		return &RelationalOperator{operator: *operator, leftOperand: leftOperand, rightOperand: rightOperand}
-	default:
-		panic(fmt.Sprintf("critterworld: parse error: expected RelationalOperator in (p *Parser).ParseRelation(), got %s", p.peek().Lexeme))
-	}
+	rightOperand := p.ParseExpression()
+	return &RelationalOperator{operator: *operator, leftOperand: leftOperand, rightOperand: rightOperand}
 }
 
 func (p *Parser) ParseExpression() Expression {
@@ -139,55 +165,66 @@ func (p *Parser) ParseTerm() Expression {
 func (p *Parser) ParseFactor() Expression {
 	token := p.peek()
 	switch token.TokenType {
-	case tMem, tMemSize, tDefense, TOffense, tSize, tEnergy, tPass, tPosture:
-		memnode := p.ParseMemNode()
-		return memnode
+	case tMem, tMemSize, tDefense, tOffense, tSize, tEnergy, tPass, tPosture:
+		return p.ParseMemNode()
 	case tNearby, tAhead, tRandom, tSmell:
-		panic(fmt.Sprintf("critterworld: Unimplemented: In (p *Parser).ParseFactor(), got %s, but handler is not implemented.", token.Lexeme))
+		panic(fmt.Sprintf("critterworld: Unimplemented: In (p *Parser).ParseFactor(), got %s, but handler is not implemented", token.Lexeme))
 	case tMinus:
-		panic(fmt.Sprintf("critterworld: Unimplemented: In (p *Parser).ParseFactor(), got %s, but handler is not implemented.", token.Lexeme))
+		_ = p.next()
+		return &UnaryOperator{operator: LexedToken{tMinus, "-"}, operand: p.ParseFactor()}
 	case tLParen:
-		panic(fmt.Sprintf("critterworld: Unimplemented: In (p *Parser).ParseFactor(), got %s, but handler is not implemented.", token.Lexeme))
+		_ = p.next()
+		expression := p.ParseExpression()
+		paren := p.next()
+		if paren.TokenType != tRParen {
+			panic(fmt.Sprintf("critterworld: parse error: In (p *Parser).ParseFactor(), expected ')' but saw: %s", paren.Lexeme))
+		}
+		return expression
 	case tNumber:
 		number := p.ParseNumber()
 		return number
 	default:
-		panic(fmt.Sprintf("critterworld: parse error: In (p *Parser).ParseFactor(), unexpected symbol: %s.", token.Lexeme))
+		panic(fmt.Sprintf("critterworld: parse error: In (p *Parser).ParseFactor(), unexpected symbol: %s", token.Lexeme))
 	}
-	// token = self.peek()
-	// match token.tokenType:
-	//
-	//	case toke if toke in SET_SUGAR | {TOKENS.T_MEM}:
-	//	    memNode = self.parseMemNode()
-	//	    return memNode
-	//	case sensor if sensor in SET_SENSORS:
-	//	    sensorNode = self.parseSensor()
-	//	    return sensorNode
-	//	case TOKENS.T_MINUS:
-	//	    op = self.getToken()
-	//	    unOp = UnaryOperator()
-	//	    unOp.operator = TokenLexeme(op.tokenType, op.lexeme)
-	//	    unOp.operand = self.parseFactor()
-	//	    return unOp
-	//	case TOKENS.T_L_PAREN:
-	//	    token = self.getToken()
-	//	    innerFactor = self.parseExpression()
-	//	    token = self.getToken()
-	//	   if token.tokenType is not TOKENS.T_R_PAREN:
-	//	        raise CritterParseError(token, ")")
-	//	    return innerFactor
-	//	case TOKENS.T_NUMBER:
-	//	    number = self.parseNumber()
-	//	    return number
-	//	case _:
-	//	    raise CritterParseError(token, "<Factor>")
+}
+
+func (p *Parser) ParseAction() ActionInterface {
+	if p.peek().TokenType == tServe {
+		_ = p.next()
+		return &ServeAction{operand: p.ParseExpression()}
+	}
+	return &Action{actionType: *p.next()}
+}
+
+func (p *Parser) ParseUpdate() *Update {
+	return &Update{destination: p.ParseMemNode(), source: p.ParseUpdateSource()}
+}
+
+func (p *Parser) ParseUpdateSource() Expression {
+	if p.peek().TokenType != tAssign {
+		panic(fmt.Sprintf("critterworld: parse error: in (p *Parser).ParseUpdateSource(), got %s but expected ':='", p.peek().TokenType))
+	}
+	_ = p.next()
+	return p.ParseExpression()
 }
 
 func (p *Parser) ParseMemNode() *MemNode {
 	token := p.next()
 	switch token.TokenType {
-	case tMemSize, tDefense, TOffense, tEnergy, tSize, tPass:
-		panic(fmt.Sprintf("critterworld: Unimplemented: In (p *Parser).ParseMemNode(), got %s, but handler is not implemented.", token.Lexeme))
+	case tMemSize:
+		return &MemNode{operand: &Number{value: 0}}
+	case tDefense:
+		return &MemNode{operand: &Number{value: 1}}
+	case tOffense:
+		return &MemNode{operand: &Number{value: 2}}
+	case tSize:
+		return &MemNode{operand: &Number{value: 3}}
+	case tEnergy:
+		return &MemNode{operand: &Number{value: 4}}
+	case tPass:
+		return &MemNode{operand: &Number{value: 5}}
+	case tPosture:
+		return &MemNode{operand: &Number{value: 6}}
 	case tMem:
 		token = p.next()
 		if token.TokenType != tLBracket {

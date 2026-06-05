@@ -23,6 +23,10 @@ type LexedToken struct {
 	Lexeme    string
 }
 
+func (lt LexedToken) String() string {
+	return fmt.Sprintf("%s", lt.Lexeme)
+}
+
 // Lexer is the representation of the lexer state. It contains the TokenRules, the input to
 // be analyzed, and the current location of the cursor within the input string.
 type Lexer struct {
@@ -57,7 +61,7 @@ func splitHeaderFromSource(src string) (string, string) {
 	var header string
 	var source string
 	var splitSource []string
-	if strings.Index(src, "species:") == 0 {
+	if strings.HasPrefix(src, "species:") {
 		splitSource = strings.SplitN(src, "\n\n", 2)
 		header = splitSource[0]
 		header += "\n"
@@ -87,7 +91,7 @@ func NewLexer(input string) *Lexer {
 // was not properly initialized or if encounters a T_MISMATCH token.
 func (l *Lexer) Tokenize() ([]*LexedToken, error) {
 	if l.input == "" || l.rules == nil {
-		return make([]*LexedToken, 0), errors.New("Lexer not initialized.")
+		return nil, errors.New("lexer not initialized")
 	}
 	var tokens []*LexedToken
 	for {
@@ -113,7 +117,7 @@ func (l *Lexer) nextToken() (*LexedToken, error) {
 		return nil, nil
 	}
 	if l.cursor > len(l.input) {
-		return nil, errors.New("Attempt to read beyond end of stream.")
+		return nil, errors.New("attempt to read beyond end of stream")
 	}
 
 	subInput := l.input[l.cursor:]

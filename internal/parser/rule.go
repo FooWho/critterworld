@@ -41,5 +41,14 @@ func (r *Rule) Clone() ASTNode {
 	return rClone
 }
 
+func (r *Rule) String() string {
+	var str string
+	str = fmt.Sprintf("%s --> \n", r.condition)
+	for _, command := range r.commands {
+		str += fmt.Sprintf("      %s\n", command)
+	}
+	return str
+}
+
 // Interface guard
 var _ ASTNode = (*Rule)(nil)

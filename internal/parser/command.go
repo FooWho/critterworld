@@ -48,6 +48,10 @@ func (u *Update) IsCommand() bool {
 	return true
 }
 
+func (u *Update) String() string {
+	return fmt.Sprintf("%s := %s", u.destination, u.source)
+}
+
 // Interface guard
 var _ Command = (*Update)(nil)
 var _ ASTNode = (*Update)(nil)
@@ -81,6 +85,10 @@ func (act *Action) IsCommand() bool {
 
 func (act *Action) IsAction() bool {
 	return true
+}
+
+func (act *Action) String() string {
+	return fmt.Sprintf("%s", act.actionType.Lexeme)
 }
 
 // Interface guard
@@ -122,8 +130,12 @@ func (act *ServeAction) IsAction() bool {
 	return true
 }
 
-func (act *ServeAction) isExpression() bool {
+func (act *ServeAction) IsExpression() bool {
 	return true
+}
+
+func (act *ServeAction) String() string {
+	return fmt.Sprintf("serve[%s]", act.operand)
 }
 
 // Interface guard

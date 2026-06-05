@@ -35,3 +35,11 @@ func (p *Program) Clone() ASTNode {
 	}
 	return &cloneP
 }
+
+func (p *Program) String() string {
+	var str string
+	for _, rule := range p.rules {
+		str += fmt.Sprintf("%s\n", rule)
+	}
+	return str
+}
