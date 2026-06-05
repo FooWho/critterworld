@@ -27,4 +27,11 @@ func main() {
 
 		fmt.Printf("Token Type: %-12s | Value: %s\n", token.TokenType, token.Lexeme)
 	}
+
+	lexer = parser.NewLexer("mem[0] = 1")
+	tokens, err = lexer.Tokenize()
+	p := parser.NewParser(tokens)
+	program := p.Parse()
+	fmt.Println(program)
+
 }

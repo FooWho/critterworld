@@ -93,7 +93,7 @@ func (l *Lexer) Tokenize() ([]*LexedToken, error) {
 	for {
 		token, err := l.nextToken()
 		if err != nil {
-			if token.TokenType != T_MISMATCH {
+			if token.TokenType != tMismatch {
 				return tokens, err
 			} else {
 				tokens = append(tokens, token)
@@ -124,11 +124,11 @@ func (l *Lexer) nextToken() (*LexedToken, error) {
 			match := subInput[loc[0]:loc[1]]
 			l.cursor += len(match)
 
-			if rule.TokenType == T_WS || rule.TokenType == T_COMMENT {
+			if rule.TokenType == tWS || rule.TokenType == tComment {
 				tok, err := l.nextToken()
 				return tok, err
 			}
-			if rule.TokenType == T_MISMATCH {
+			if rule.TokenType == tMismatch {
 				return &LexedToken{TokenType: rule.TokenType, Lexeme: match}, fmt.Errorf("Unknown token at index: %d: %q", l.cursor, subInput[0])
 			}
 			return &LexedToken{TokenType: rule.TokenType, Lexeme: match}, nil

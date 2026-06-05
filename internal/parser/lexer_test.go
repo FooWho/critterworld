@@ -23,47 +23,47 @@ func TestTokenize(t *testing.T) {
 			name:  "Valid statement with comment",
 			input: `MEMSIZE >= 50 and DEFENSE = 10 --> eat; // This is a comment`,
 			expectedTokens: []expectedToken{
-				{T_MEMSIZE, "MEMSIZE"},
-				{T_GEQU, ">="},
-				{T_NUMBER, "50"},
-				{T_AND, "and"},
-				{T_DEFENSE, "DEFENSE"},
-				{T_EQU, "="},
-				{T_NUMBER, "10"},
-				{T_COMM, "-->"},
-				{T_EAT, "eat"},
-				{T_SEMICOLON, ";"},
+				{tMemSize, "MEMSIZE"},
+				{tGequ, ">="},
+				{tNumber, "50"},
+				{tAnd, "and"},
+				{tDefense, "DEFENSE"},
+				{tEqu, "="},
+				{tNumber, "10"},
+				{tComm, "-->"},
+				{tEat, "eat"},
+				{tSemicolon, ";"},
 			},
 		},
 		{
 			name:  "Valid statement without comment",
 			input: `ENERGY <= 50 and ahead[1] = -10 --> eat;`,
 			expectedTokens: []expectedToken{
-				{T_ENERGY, "ENERGY"},
-				{T_LEQU, "<="},
-				{T_NUMBER, "50"},
-				{T_AND, "and"},
-				{T_AHEAD, "ahead"},
-				{T_L_BRACKET, "["},
-				{T_NUMBER, "1"},
-				{T_R_BRACKET, "]"},
-				{T_EQU, "="},
-				{T_MINUS, "-"},
-				{T_NUMBER, "10"},
-				{T_COMM, "-->"},
-				{T_EAT, "eat"},
-				{T_SEMICOLON, ";"},
+				{tEnergy, "ENERGY"},
+				{tLequ, "<="},
+				{tNumber, "50"},
+				{tAnd, "and"},
+				{tAhead, "ahead"},
+				{tLBracket, "["},
+				{tNumber, "1"},
+				{tRBracket, "]"},
+				{tEqu, "="},
+				{tMinus, "-"},
+				{tNumber, "10"},
+				{tComm, "-->"},
+				{tEat, "eat"},
+				{tSemicolon, ";"},
 			},
 		},
 		{
 			name:  "Unknown token mismatch",
 			input: `MEMSIZE >= 50 and  | DEFENSE = 10 --> eat; // This is a comment`,
 			expectedTokens: []expectedToken{
-				{T_MEMSIZE, "MEMSIZE"},
-				{T_GEQU, ">="},
-				{T_NUMBER, "50"},
-				{T_AND, "and"},
-				{T_MISMATCH, "| DEFENSE = 10 --> eat; // This is a comment"},
+				{tMemSize, "MEMSIZE"},
+				{tGequ, ">="},
+				{tNumber, "50"},
+				{tAnd, "and"},
+				{tMismatch, "| DEFENSE = 10 --> eat; // This is a comment"},
 			},
 			expectedErr: "Unknown token",
 		},
@@ -85,7 +85,6 @@ func TestTokenize(t *testing.T) {
 			l := NewLexer(tt.input)
 			tokens, err := l.Tokenize()
 
-			// Verify Error State
 			if tt.expectedErr != "" {
 				if err == nil {
 					t.Fatalf("expected error containing %q, got nil", tt.expectedErr)
@@ -97,12 +96,10 @@ func TestTokenize(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			// Verify Token Length
 			if len(tokens) != len(tt.expectedTokens) {
 				t.Fatalf("expected %d tokens, got %d", len(tt.expectedTokens), len(tokens))
 			}
 
-			// Verify Individual Tokens (Type and Lexeme)
 			for i, expected := range tt.expectedTokens {
 				if tokens[i].TokenType != expected.Type {
 					t.Errorf("token[%d]: expected type %v, got %v", i, expected.Type, tokens[i].TokenType)

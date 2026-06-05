@@ -59,7 +59,7 @@ type RelationalOperator struct {
 }
 
 func (ro *RelationalOperator) NodeType() string {
-	return "LogicalOperator"
+	return "RelationalOperator"
 }
 
 func (ro *RelationalOperator) Children() []ASTNode {
@@ -79,11 +79,10 @@ func (ro *RelationalOperator) Clone() ASTNode {
 		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (ro *RelationalOperator).Clone(), got %T", clonedOperand))
 	}
 	clonedOperand = ro.rightOperand.Clone()
-	cloneRO.rightOperand = clonedOperand.(Expression)
+	cloneRO.rightOperand, ok = clonedOperand.(Expression)
 	if !ok {
 		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (ro *RelationalOperator).Clone(), got %T", clonedOperand))
 	}
-	cloneRO.rightOperand, ok = clonedOperand.(Expression)
 
 	return &cloneRO
 }
