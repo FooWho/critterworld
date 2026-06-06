@@ -27,11 +27,17 @@ func main() {
 
 		fmt.Printf("Token Type: %-12s | Value: %s\n", token.TokenType, token.Lexeme)
 	}
+	p := parser.NewParser(tokens)
+	program, err := p.Parse()
+	if err != nil {
+		fmt.Printf("Got error: %v", err)
+	}
+	fmt.Print(program)
 
 	lexer = parser.NewLexer("{1 = 1 or 2 = 2} and 5 = 3 --> mem[0] := 3 * (5 + 3);")
 	tokens, err = lexer.Tokenize()
-	p := parser.NewParser(tokens)
-	program, err := p.Parse()
+	p = parser.NewParser(tokens)
+	program, err = p.Parse()
 	if err != nil {
 		fmt.Printf("Got error: %v", err)
 	}

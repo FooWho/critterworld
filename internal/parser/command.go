@@ -19,10 +19,7 @@ func (u *Update) NodeType() string {
 }
 
 func (u *Update) Children() []ASTNode {
-	children := make([]ASTNode, 2)
-	children[0] = u.destination
-	children[1] = u.source
-	return children
+	return []ASTNode{u.destination, u.source}
 }
 
 func (u *Update) Clone() ASTNode {
@@ -38,7 +35,7 @@ func (u *Update) Clone() ASTNode {
 	clonedSource := u.source.Clone()
 	uClone.source, ok = clonedSource.(Expression)
 	if !ok {
-		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (ro *RelationalOperator).Clone(), got %T", clonedSource))
+		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (u *Update).Clone(), got %T", clonedSource))
 	}
 
 	return &uClone
@@ -74,9 +71,7 @@ func (act *Action) Children() []ASTNode {
 }
 
 func (act *Action) Clone() ASTNode {
-	actClone := Action{}
-	actClone.actionType = act.actionType
-	return &actClone
+	return &Action{actionType: act.actionType}
 }
 
 func (act *Action) IsCommand() bool {
@@ -106,20 +101,11 @@ func (act *ServeAction) NodeType() string {
 }
 
 func (act *ServeAction) Children() []ASTNode {
-	children := make([]ASTNode, 1)
-	children[0] = act.operand
-	return children
+	return []ASTNode{act.operand}
 }
 
 func (act *ServeAction) Clone() ASTNode {
-	var ok bool
-	actClone := ServeAction{}
-	clonedOperand := act.operand.Clone()
-	actClone.operand, ok = clonedOperand.(Expression)
-	if !ok {
-		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (act *ServeAction).Clone(), got %T", clonedOperand))
-	}
-	return &actClone
+	return &ServeAction{Action: Action{actionType: act.actionType}, operand: act.operand.Clone().(Expression)}
 }
 
 func (act *ServeAction) IsCommand() bool {

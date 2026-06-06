@@ -20,10 +20,7 @@ func (lo *LogicalOperator) NodeType() string {
 }
 
 func (lo *LogicalOperator) Children() []ASTNode {
-	children := make([]ASTNode, 2)
-	children[0] = lo.leftOperand
-	children[1] = lo.rightOperand
-	return children
+	return []ASTNode{lo.leftOperand, lo.rightOperand}
 }
 
 func (lo *LogicalOperator) Clone() ASTNode {
@@ -88,10 +85,7 @@ func (ro *RelationalOperator) NodeType() string {
 }
 
 func (ro *RelationalOperator) Children() []ASTNode {
-	children := make([]ASTNode, 2)
-	children[0] = ro.leftOperand
-	children[1] = ro.rightOperand
-	return children
+	return []ASTNode{ro.leftOperand, ro.rightOperand}
 }
 
 func (ro *RelationalOperator) Clone() ASTNode {

@@ -97,12 +97,10 @@ func (l *Lexer) Tokenize() ([]*LexedToken, error) {
 	for {
 		token, err := l.nextToken()
 		if err != nil {
-			if token.TokenType != tMismatch {
-				return tokens, err
-			} else {
+			if token != nil && token.TokenType == tMismatch {
 				tokens = append(tokens, token)
-				return tokens, err
 			}
+			return tokens, err
 		}
 		if token == nil {
 			break

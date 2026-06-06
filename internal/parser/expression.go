@@ -20,10 +20,7 @@ func (bo *BinaryOperator) NodeType() string {
 }
 
 func (bo *BinaryOperator) Children() []ASTNode {
-	children := make([]ASTNode, 2)
-	children[0] = bo.leftOperand
-	children[1] = bo.rightOperand
-	return children
+	return []ASTNode{bo.leftOperand, bo.rightOperand}
 }
 
 func (bo *BinaryOperator) Clone() ASTNode {
@@ -37,7 +34,7 @@ func (bo *BinaryOperator) Clone() ASTNode {
 	}
 
 	clonedOperand = bo.rightOperand.Clone()
-	clonedBO.rightOperand = clonedOperand.(Expression)
+	clonedBO.rightOperand, ok = clonedOperand.(Expression)
 	if !ok {
 		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (bo *BinaryOperator).Clone(), got %T", clonedOperand))
 	}
@@ -92,9 +89,7 @@ func (uo *UnaryOperator) NodeType() string {
 }
 
 func (uo *UnaryOperator) Children() []ASTNode {
-	children := make([]ASTNode, 1)
-	children[0] = uo.operand
-	return children
+	return []ASTNode{uo.operand}
 }
 
 func (uo *UnaryOperator) Clone() ASTNode {
@@ -131,22 +126,11 @@ func (mn *MemNode) NodeType() string {
 }
 
 func (mn *MemNode) Children() []ASTNode {
-	children := make([]ASTNode, 1)
-	children[0] = mn.operand
-	return children
+	return []ASTNode{mn.operand}
 }
 
 func (mn *MemNode) Clone() ASTNode {
-	var ok bool
-	clonedMN := MemNode{}
-
-	clonedOperand := mn.operand.Clone()
-	clonedMN.operand, ok = clonedOperand.(Expression)
-	if !ok {
-		panic(fmt.Sprintf("critterworld: invariant violation: expected Expression in (mn *MemNode).Clone(), got %T", clonedOperand))
-	}
-
-	return &clonedMN
+	return &MemNode{operand: mn.operand.Clone().(Expression)}
 }
 
 func (mn *MemNode) IsExpression() bool {
@@ -190,3 +174,75 @@ func (n *Number) String() string {
 // Interface guard
 var _ Expression = (*Number)(nil)
 var _ ASTNode = (*Number)(nil)
+
+type Sensor struct {
+	sensorType string
+}
+
+func (s *Sensor) NodeType() string {
+	return "Sensor"
+}
+
+func (s *Sensor) Children() []ASTNode {
+	return nil
+}
+
+func (s *Sensor) Clone() ASTNode {
+	return &Sensor{sensorType: s.sensorType}
+}
+
+func (s *Sensor) IsExpression() bool {
+	return true
+}
+
+func (s *Sensor) IsSensor() bool {
+	return true
+}
+
+func (s *Sensor) String() string {
+	return fmt.Sprintf("%s", s.sensorType)
+}
+
+// Interface guard
+var _ SensorInterface = (*Sensor)(nil)
+var _ Expression = (*Sensor)(nil)
+var _ ASTNode = (*Sensor)(nil)
+
+type DirectedSensor struct {
+	Sensor
+	operand Expression
+}
+
+func (ds *DirectedSensor) NodeType() string {
+	return "DirectedSensor"
+}
+
+func (ds *DirectedSensor) Children() []ASTNode {
+	return []ASTNode{ds.operand}
+}
+
+func (ds *DirectedSensor) Clone() ASTNode {
+	return &DirectedSensor{Sensor: ds.Sensor, operand: ds.operand.Clone().(Expression)}
+}
+
+func (ds *DirectedSensor) IsExpression() bool {
+	return true
+}
+
+func (ds *DirectedSensor) IsSensor() bool {
+	return true
+}
+
+func (ds *DirectedSensor) String() string {
+	return fmt.Sprintf("%s[%s]", ds.sensorType, ds.operand)
+}
+
+type SensorInterface interface {
+	Expression
+	IsSensor() bool
+}
+
+// Interface guard
+var _ SensorInterface = (*DirectedSensor)(nil)
+var _ Expression = (*DirectedSensor)(nil)
+var _ ASTNode = (*DirectedSensor)(nil)

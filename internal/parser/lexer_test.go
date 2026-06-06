@@ -76,7 +76,7 @@ func TestTokenize(t *testing.T) {
 			name:           "Empty input error",
 			input:          "",
 			expectedTokens: []expectedToken{},
-			expectedErr:    "Lexer not initialized.",
+			expectedErr:    "lexer not initialized",
 		},
 	}
 

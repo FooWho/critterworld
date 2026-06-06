@@ -38,18 +38,17 @@ func (p *Parser) next() *LexedToken {
 	return &LexedToken{tNone, tNone.String()}
 }
 
-func (p *Parser) Parse() (*Program, error) {
-	var err error
+func (p *Parser) Parse() (program *Program, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("parsing failed: %v", r)
 		}
 	}()
-	var program Program
+	program = &Program{}
 	for p.peek().TokenType != tNone {
 		program.AddRule(p.ParseRule())
 	}
-	return &program, err
+	return program, err
 }
 
 func (p *Parser) ParseRule() *Rule {
@@ -78,7 +77,7 @@ func (p *Parser) ParseCommand() Command {
 	switch p.peek().TokenType {
 	case tMem, tMemSize, tDefense, tOffense, tEnergy, tPass, tPosture:
 		return p.ParseUpdate()
-	case tForward, tBackward, tLeft, tRight, tEat, tAttack, tGrow, tBud, tServe:
+	case tWait, tForward, tBackward, tLeft, tRight, tEat, tAttack, tGrow, tBud, tServe:
 		return p.ParseAction()
 	default:
 		panic(fmt.Sprintf("critterworld: parse error: in (p *Parser).ParseCommand(), got %s but expected a Command", p.peek().TokenType))
@@ -168,7 +167,7 @@ func (p *Parser) ParseFactor() Expression {
 	case tMem, tMemSize, tDefense, tOffense, tSize, tEnergy, tPass, tPosture:
 		return p.ParseMemNode()
 	case tNearby, tAhead, tRandom, tSmell:
-		panic(fmt.Sprintf("critterworld: Unimplemented: In (p *Parser).ParseFactor(), got %s, but handler is not implemented", token.Lexeme))
+		return p.ParseSensor()
 	case tMinus:
 		_ = p.next()
 		return &UnaryOperator{operator: LexedToken{tMinus, "-"}, operand: p.ParseFactor()}
@@ -188,10 +187,41 @@ func (p *Parser) ParseFactor() Expression {
 	}
 }
 
+func (p *Parser) ParseSensor() SensorInterface {
+	token := p.next()
+	switch token.TokenType {
+	case tNearby, tAhead, tRandom:
+		ds := &(DirectedSensor{Sensor: Sensor{sensorType: token.Lexeme}})
+		token = p.next()
+		if token.TokenType != tLBracket {
+			panic(fmt.Sprintf("critterworld: parse error: In (p *Parser).ParseSensor(), expected '[' but saw: %s", token.Lexeme))
+		}
+		ds.operand = p.ParseExpression()
+		token = p.next()
+		if token.TokenType != tRBracket {
+			panic(fmt.Sprintf("critterworld: parse error: In (p *Parser).ParseSensor(), expected ']' but saw: %s", token.Lexeme))
+		}
+		return ds
+	case tSmell:
+		return &Sensor{sensorType: token.Lexeme}
+	default:
+		panic(fmt.Sprintf("critterworld: parse error: In (p *Parser).ParseSensor(), unexpected symbol: %s", token.Lexeme))
+	}
+}
+
 func (p *Parser) ParseAction() ActionInterface {
 	if p.peek().TokenType == tServe {
-		_ = p.next()
-		return &ServeAction{operand: p.ParseExpression()}
+		sToken := p.next()
+		token := p.next()
+		if token.TokenType != tLBracket {
+			panic(fmt.Sprintf("critterworld: parse error: In (p *Parser).ParseSensor(), expected '[' but saw: %s", token.Lexeme))
+		}
+		operand := p.ParseExpression()
+		token = p.next()
+		if token.TokenType != tRBracket {
+			panic(fmt.Sprintf("critterworld: parse error: In (p *Parser).ParseSensor(), expected ']' but saw: %s", token.Lexeme))
+		}
+		return &ServeAction{Action: Action{actionType: *sToken}, operand: operand}
 	}
 	return &Action{actionType: *p.next()}
 }
