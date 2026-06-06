@@ -32,17 +32,22 @@ func main() {
 	if err != nil {
 		fmt.Printf("Got error: %v", err)
 	}
-	fmt.Print(program)
 
-	lexer = parser.NewLexer("{1 = 1 or 2 = 2} and 5 = 3 --> mem[0] := 3 * (5 + 3);")
-	tokens, err = lexer.Tokenize()
-	p = parser.NewParser(tokens)
-	program, err = p.Parse()
-	if err != nil {
-		fmt.Printf("Got error: %v", err)
+	ast := parser.NewAbstractSyntaxTree(program)
+	nodes := ast.GetNodes()
+	for i := 0; i < len(nodes); i++ {
+		fmt.Printf("%t\n", nodes[i])
 	}
-	if program != nil {
-		fmt.Print(program)
-	}
+
+	//lexer = parser.NewLexer("{1 = 1 or 2 = 2} and 5 = 3 --> mem[0] := 3 * (5 + 3);")
+	//tokens, err = lexer.Tokenize()
+	//p = parser.NewParser(tokens)
+	//program, err = p.Parse()
+	//if err != nil {
+	//		fmt.Printf("Got error: %v", err)
+	//}
+	//if program != nil {
+	//		fmt.Print(program)
+	//}
 
 }

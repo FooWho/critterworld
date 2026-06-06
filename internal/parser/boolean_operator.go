@@ -6,6 +6,7 @@ import (
 
 type BooleanOperator interface {
 	ASTNode
+	SwapOperands()
 	IsBooleanOperator() bool
 }
 
@@ -70,6 +71,12 @@ func (lo *LogicalOperator) breakingPrecedence(operand BooleanOperator) bool {
 	return false
 }
 
+func (lo *LogicalOperator) SwapOperands() {
+	tmp := lo.leftOperand
+	lo.leftOperand = lo.rightOperand
+	lo.rightOperand = tmp
+}
+
 // Interface guard
 var _ BooleanOperator = (*LogicalOperator)(nil)
 var _ ASTNode = (*LogicalOperator)(nil)
@@ -112,6 +119,12 @@ func (ro *RelationalOperator) String() string {
 
 func (ro *RelationalOperator) IsBooleanOperator() bool {
 	return true
+}
+
+func (ro *RelationalOperator) SwapOperands() {
+	tmp := ro.leftOperand
+	ro.leftOperand = ro.rightOperand
+	ro.rightOperand = tmp
 }
 
 // Interface guard

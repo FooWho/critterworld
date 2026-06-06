@@ -75,6 +75,12 @@ func (bo *BinaryOperator) breakingPrecedence(operand Expression) bool {
 	return false
 }
 
+func (bo *BinaryOperator) SwapOperands() {
+	tmp := bo.leftOperand
+	bo.leftOperand = bo.rightOperand
+	bo.rightOperand = tmp
+}
+
 // Interface guard
 var _ Expression = (*BinaryOperator)(nil)
 var _ ASTNode = (*BinaryOperator)(nil)
