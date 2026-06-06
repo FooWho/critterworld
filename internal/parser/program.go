@@ -43,3 +43,10 @@ func (p *Program) String() string {
 	}
 	return str
 }
+
+func (p *Program) isASTNode() {
+
+}
+
+// Interface guard
+var _ ASTNode = (*Program)(nil)

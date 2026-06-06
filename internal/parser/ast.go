@@ -11,9 +11,9 @@ type AbstractSyntaxTree struct {
 
 type ASTNode interface {
 	fmt.Stringer
-	NodeType() string
 	Children() []ASTNode
 	Clone() ASTNode
+	isASTNode()
 }
 
 func NewAbstractSyntaxTree(root *Program) AbstractSyntaxTree {
@@ -44,10 +44,12 @@ func (ast *AbstractSyntaxTree) GetNodes() []ASTNode {
 	return nodes
 }
 
-func (ast *AbstractSyntaxTree) GetNodesByInterface() []ASTNode {
-	candidates := ast.GetNodes()
-	for _, node := range candidates {
-		if 
+func GetNodesOfType[T ASTNode](ast *AbstractSyntaxTree) []T {
+	var matchedNodes []T
+	for _, node := range ast.GetNodes() {
+		if match, ok := node.(T); ok {
+			matchedNodes = append(matchedNodes, match)
+		}
 	}
+	return matchedNodes
 }
-

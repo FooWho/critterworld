@@ -50,5 +50,8 @@ func (r *Rule) String() string {
 	return str
 }
 
+func (r *Rule) isASTNode() {
+}
+
 // Interface guard
 var _ ASTNode = (*Rule)(nil)

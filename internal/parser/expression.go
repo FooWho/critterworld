@@ -6,7 +6,7 @@ import (
 
 type Expression interface {
 	ASTNode
-	IsExpression() bool
+	isExpression()
 }
 
 type BinaryOperator struct {
@@ -42,8 +42,7 @@ func (bo *BinaryOperator) Clone() ASTNode {
 	return &clonedBO
 }
 
-func (bo *BinaryOperator) IsExpression() bool {
-	return true
+func (bo *BinaryOperator) isExpression() {
 }
 
 func (bo *BinaryOperator) String() string {
@@ -64,12 +63,12 @@ func (bo *BinaryOperator) String() string {
 }
 
 func (bo *BinaryOperator) breakingPrecedence(operand Expression) bool {
-	if operand.NodeType() == "BinaryOperator" &&
+	if op, ok := operand.(*BinaryOperator); ok &&
 		(bo.operator.TokenType == tStar ||
 			bo.operator.TokenType == tDiv ||
 			bo.operator.TokenType == tMod) &&
-		(operand.(*BinaryOperator).operator.TokenType == tPlus ||
-			operand.(*BinaryOperator).operator.TokenType == tMinus) {
+		(op.operator.TokenType == tPlus ||
+			op.operator.TokenType == tMinus) {
 		return true
 	}
 	return false
@@ -79,6 +78,10 @@ func (bo *BinaryOperator) SwapOperands() {
 	tmp := bo.leftOperand
 	bo.leftOperand = bo.rightOperand
 	bo.rightOperand = tmp
+}
+
+func (bo *BinaryOperator) isASTNode() {
+
 }
 
 // Interface guard
@@ -111,8 +114,10 @@ func (uo *UnaryOperator) Clone() ASTNode {
 	return &clonedUO
 }
 
-func (uo *UnaryOperator) IsExpression() bool {
-	return true
+func (uo *UnaryOperator) isExpression() {
+}
+
+func (uo *UnaryOperator) isASTNode() {
 }
 
 func (uo *UnaryOperator) String() string {
@@ -139,8 +144,12 @@ func (mn *MemNode) Clone() ASTNode {
 	return &MemNode{operand: mn.operand.Clone().(Expression)}
 }
 
-func (mn *MemNode) IsExpression() bool {
-	return true
+func (mn *MemNode) isExpression() {
+
+}
+
+func (mn *MemNode) isASTNode() {
+
 }
 
 func (mn *MemNode) String() string {
@@ -169,8 +178,12 @@ func (n *Number) Clone() ASTNode {
 	return &clonedN
 }
 
-func (n *Number) IsExpression() bool {
-	return true
+func (n *Number) isExpression() {
+
+}
+
+func (n *Number) isASTNode() {
+
 }
 
 func (n *Number) String() string {
@@ -197,12 +210,16 @@ func (s *Sensor) Clone() ASTNode {
 	return &Sensor{sensorType: s.sensorType}
 }
 
-func (s *Sensor) IsExpression() bool {
-	return true
+func (s *Sensor) isExpression() {
+
 }
 
-func (s *Sensor) IsSensor() bool {
-	return true
+func (s *Sensor) isSensor() {
+
+}
+
+func (s *Sensor) isASTNode() {
+
 }
 
 func (s *Sensor) String() string {
@@ -231,12 +248,12 @@ func (ds *DirectedSensor) Clone() ASTNode {
 	return &DirectedSensor{Sensor: ds.Sensor, operand: ds.operand.Clone().(Expression)}
 }
 
-func (ds *DirectedSensor) IsExpression() bool {
-	return true
+func (ds *DirectedSensor) isExpression() {
+
 }
 
-func (ds *DirectedSensor) IsSensor() bool {
-	return true
+func (ds *DirectedSensor) isSensor() {
+
 }
 
 func (ds *DirectedSensor) String() string {
@@ -245,7 +262,7 @@ func (ds *DirectedSensor) String() string {
 
 type SensorInterface interface {
 	Expression
-	IsSensor() bool
+	isSensor()
 }
 
 // Interface guard

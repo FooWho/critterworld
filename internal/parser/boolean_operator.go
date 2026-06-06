@@ -7,7 +7,7 @@ import (
 type BooleanOperator interface {
 	ASTNode
 	SwapOperands()
-	IsBooleanOperator() bool
+	isBooleanOperator()
 }
 
 type LogicalOperator struct {
@@ -42,8 +42,12 @@ func (lo *LogicalOperator) Clone() ASTNode {
 	return &cloneLO
 }
 
-func (lo *LogicalOperator) IsBooleanOperator() bool {
-	return true
+func (lo *LogicalOperator) isBooleanOperator() {
+
+}
+
+func (lo *LogicalOperator) isASTNode() {
+
 }
 
 func (lo *LogicalOperator) String() string {
@@ -63,9 +67,9 @@ func (lo *LogicalOperator) String() string {
 }
 
 func (lo *LogicalOperator) breakingPrecedence(operand BooleanOperator) bool {
-	if operand.NodeType() == "LogicalOperator" &&
+	if op, ok := operand.(*LogicalOperator); ok &&
 		lo.operator.TokenType == tAnd &&
-		operand.(*LogicalOperator).operator.TokenType == tOr {
+		op.operator.TokenType == tOr {
 		return true
 	}
 	return false
@@ -117,14 +121,18 @@ func (ro *RelationalOperator) String() string {
 	return fmt.Sprintf("%s %s %s", ro.leftOperand, ro.operator, ro.rightOperand)
 }
 
-func (ro *RelationalOperator) IsBooleanOperator() bool {
-	return true
+func (ro *RelationalOperator) isBooleanOperator() {
+
 }
 
 func (ro *RelationalOperator) SwapOperands() {
 	tmp := ro.leftOperand
 	ro.leftOperand = ro.rightOperand
 	ro.rightOperand = tmp
+}
+
+func (ro *RelationalOperator) isASTNode() {
+
 }
 
 // Interface guard

@@ -63,7 +63,7 @@ func (p *Parser) ParseCommands() []Command {
 	command := p.ParseCommand()
 	commands = append(commands, command)
 	for p.peek().TokenType != tSemicolon {
-		if command.NodeType() == "Action" || command.NodeType() == "ServeAction" {
+		if _, ok := command.(ActionInterface); ok {
 			panic("critterworld: parse error: in (p *Parser).ParseCommands(), got Commands continue after Action")
 		}
 		command = p.ParseCommand()

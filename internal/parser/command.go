@@ -6,7 +6,7 @@ import (
 
 type Command interface {
 	ASTNode
-	IsCommand() bool
+	isCommand()
 }
 
 type Update struct {
@@ -41,12 +41,14 @@ func (u *Update) Clone() ASTNode {
 	return &uClone
 }
 
-func (u *Update) IsCommand() bool {
-	return true
+func (u *Update) isCommand() {
 }
 
 func (u *Update) String() string {
 	return fmt.Sprintf("%s := %s", u.destination, u.source)
+}
+
+func (u *Update) isASTNode() {
 }
 
 // Interface guard
@@ -55,7 +57,7 @@ var _ ASTNode = (*Update)(nil)
 
 type ActionInterface interface {
 	Command
-	IsAction() bool
+	isAction()
 }
 
 type Action struct {
@@ -74,12 +76,14 @@ func (act *Action) Clone() ASTNode {
 	return &Action{actionType: act.actionType}
 }
 
-func (act *Action) IsCommand() bool {
-	return true
+func (act *Action) isCommand() {
 }
 
-func (act *Action) IsAction() bool {
-	return true
+func (act *Action) isAction() {
+}
+
+func (act *Action) isASTNode() {
+
 }
 
 func (act *Action) String() string {
@@ -108,16 +112,13 @@ func (act *ServeAction) Clone() ASTNode {
 	return &ServeAction{Action: Action{actionType: act.actionType}, operand: act.operand.Clone().(Expression)}
 }
 
-func (act *ServeAction) IsCommand() bool {
-	return true
+func (act *ServeAction) isCommand() {
 }
 
-func (act *ServeAction) IsAction() bool {
-	return true
+func (act *ServeAction) isAction() {
 }
 
-func (act *ServeAction) IsExpression() bool {
-	return true
+func (act *ServeAction) isASTNode() {
 }
 
 func (act *ServeAction) String() string {
