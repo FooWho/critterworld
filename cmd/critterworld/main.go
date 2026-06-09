@@ -34,9 +34,9 @@ func main() {
 	}
 
 	ast := parser.NewAbstractSyntaxTree(program)
-	nodes := ast.GetNodes()
-	for i := 0; i < len(nodes); i++ {
-		fmt.Printf("%t\n", nodes[i])
+	nodes := parser.GetNodesOfType[*parser.LogicalOperator](&ast)
+	for _, val := range nodes {
+		fmt.Println(val.String())
 	}
 
 	//lexer = parser.NewLexer("{1 = 1 or 2 = 2} and 5 = 3 --> mem[0] := 3 * (5 + 3);")
