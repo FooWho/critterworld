@@ -5,8 +5,7 @@ import (
 )
 
 type AbstractSyntaxTree struct {
-	rootNode  *Program
-	nodeCount int
+	rootNode *Program
 }
 
 type ASTNode interface {
