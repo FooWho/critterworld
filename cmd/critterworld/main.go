@@ -34,7 +34,7 @@ func main() {
 	}
 
 	ast := parser.NewAbstractSyntaxTree(program)
-	nodes := parser.GetNodesOfType[*parser.LogicalOperator](&ast)
+	nodes := parser.GetNodesByType[*parser.LogicalOperator](&ast)
 	for _, val := range nodes {
 		fmt.Println(val.String())
 	}

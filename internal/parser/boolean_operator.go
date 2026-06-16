@@ -9,7 +9,6 @@ type BooleanOperator interface {
 	SwapOperands()
 	isBooleanOperator()
 }
-
 type LogicalOperator struct {
 	operator     LexedToken
 	leftOperand  BooleanOperator
@@ -81,6 +80,26 @@ func (lo *LogicalOperator) SwapOperands() {
 	lo.rightOperand = tmp
 }
 
+func (lo *LogicalOperator) ReplaceChild(oldChild, newChild ASTNode) error {
+	newBoolOp, isBoolOp := newChild.(BooleanOperator)
+	if !isBoolOp {
+		fmt.Errorf("newChild is type %T, does not implement BooleanOperator")
+	}
+	if lo.leftOperand == oldChild {
+		lo.leftOperand = newBoolOp
+		return nil
+	} else if lo.rightOperand == oldChild {
+		lo.rightOperand = newBoolOp
+		return nil
+	} else {
+		return fmt.Errorf("oldChild: %v not found in lo: %v", oldChild, lo)
+	}
+}
+
+func (lo *LogicalOperator) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("LogicalOperator %v cannot remove child %v", lo, child)
+}
+
 // Interface guard
 var _ BooleanOperator = (*LogicalOperator)(nil)
 var _ ASTNode = (*LogicalOperator)(nil)
@@ -121,14 +140,34 @@ func (ro *RelationalOperator) String() string {
 	return fmt.Sprintf("%s %s %s", ro.leftOperand, ro.operator, ro.rightOperand)
 }
 
-func (ro *RelationalOperator) isBooleanOperator() {
-
-}
-
 func (ro *RelationalOperator) SwapOperands() {
 	tmp := ro.leftOperand
 	ro.leftOperand = ro.rightOperand
 	ro.rightOperand = tmp
+}
+
+func (ro *RelationalOperator) ReplaceChild(oldChild, newChild ASTNode) error {
+	newExp, isExp := newChild.(Expression)
+	if !isExp {
+		fmt.Errorf("newChild is type %T, does not implement Expression")
+	}
+	if ro.leftOperand == oldChild {
+		ro.leftOperand = newExp
+		return nil
+	} else if ro.rightOperand == oldChild {
+		ro.rightOperand = newExp
+		return nil
+	} else {
+		return fmt.Errorf("oldChild: %v not found in ro: %v", oldChild, ro)
+	}
+}
+
+func (ro *RelationalOperator) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("RelationalOperator %v cannot remove child %v", ro, child)
+}
+
+func (ro *RelationalOperator) isBooleanOperator() {
+
 }
 
 func (ro *RelationalOperator) isASTNode() {

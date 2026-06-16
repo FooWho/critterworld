@@ -41,11 +41,38 @@ func (u *Update) Clone() ASTNode {
 	return &uClone
 }
 
-func (u *Update) isCommand() {
-}
-
 func (u *Update) String() string {
 	return fmt.Sprintf("%s := %s", u.destination, u.source)
+}
+
+func (u *Update) ReplaceChild(oldChild, newChild ASTNode) error {
+	newDest, isMemNode := newChild.(*MemNode)
+	if isMemNode {
+		if u.destination == oldChild {
+			u.destination = newDest
+			return nil
+		} else {
+			return fmt.Errorf("newChild is MemNode, but u.destination is not oldChild")
+		}
+	}
+	newSource, isExp := newChild.(Expression)
+	if isExp {
+		if u.source == oldChild {
+			u.source = newSource
+			return nil
+		} else {
+			return fmt.Errorf("newChild is Expression but u.source is not oldChild")
+		}
+	}
+
+	return fmt.Errorf(("newChild is %T, not MemNode or Expression"))
+}
+
+func (u *Update) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("Update node %v cannot remove child %v", u, child)
+}
+
+func (u *Update) isCommand() {
 }
 
 func (u *Update) isASTNode() {
@@ -76,6 +103,18 @@ func (act *Action) Clone() ASTNode {
 	return &Action{actionType: act.actionType}
 }
 
+func (act *Action) ReplaceChild(oldChild, newChild ASTNode) error {
+	return nil
+}
+
+func (act *Action) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("Action %v cannot remove child %v", act, child)
+}
+
+func (act *Action) String() string {
+	return fmt.Sprintf("%s", act.actionType.Lexeme)
+}
+
 func (act *Action) isCommand() {
 }
 
@@ -84,10 +123,6 @@ func (act *Action) isAction() {
 
 func (act *Action) isASTNode() {
 
-}
-
-func (act *Action) String() string {
-	return fmt.Sprintf("%s", act.actionType.Lexeme)
 }
 
 // Interface guard

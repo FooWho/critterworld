@@ -80,6 +80,26 @@ func (bo *BinaryOperator) SwapOperands() {
 	bo.rightOperand = tmp
 }
 
+func (bo *BinaryOperator) ReplaceChild(oldChild, newChild ASTNode) error {
+	newExp, isExp := newChild.(Expression)
+	if !isExp {
+		return fmt.Errorf("newChild does not implement Expression")
+	}
+	if bo.leftOperand == oldChild {
+		bo.leftOperand = newExp
+		return nil
+	} else if bo.rightOperand == oldChild {
+		bo.rightOperand = newExp
+		return nil
+	} else {
+		return fmt.Errorf("oldChild %v not found in bo %v", oldChild, bo)
+	}
+}
+
+func (bo *BinaryOperator) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("bo %v cannot remove child %v", bo, child)
+}
+
 func (bo *BinaryOperator) isASTNode() {
 
 }
@@ -114,6 +134,23 @@ func (uo *UnaryOperator) Clone() ASTNode {
 	return &clonedUO
 }
 
+func (uo *UnaryOperator) ReplaceChild(oldChild, newChild ASTNode) error {
+	newExp, isExp := newChild.(Expression)
+	if !isExp {
+		return fmt.Errorf("newChild is %T, does not implement Expression")
+	}
+	if uo.operand == oldChild {
+		uo.operand = newExp
+		return nil
+	} else {
+		return fmt.Errorf("oldChild %v not found in uo: %v", oldChild, uo)
+	}
+}
+
+func (uo *UnaryOperator) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("UnaryOperator %v cannot remove child %v", uo, child)
+}
+
 func (uo *UnaryOperator) isExpression() {
 }
 
@@ -142,6 +179,14 @@ func (mn *MemNode) Children() []ASTNode {
 
 func (mn *MemNode) Clone() ASTNode {
 	return &MemNode{operand: mn.operand.Clone().(Expression)}
+}
+
+func (mn *MemNode) ReplaceChild(oldChild, newChild ASTNode) error {
+	return nil
+}
+
+func (mn *MemNode) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("MemNode %v cannot remove operand %v", mn, child)
 }
 
 func (mn *MemNode) isExpression() {
@@ -178,6 +223,14 @@ func (n *Number) Clone() ASTNode {
 	return &clonedN
 }
 
+func (n *Number) ReplaceChild(oldChild, newChild ASTNode) error {
+	return fmt.Errorf("Number nodes do not have children")
+}
+
+func (n *Number) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("Number %v cannot remove child %v", n, child)
+}
+
 func (n *Number) isExpression() {
 
 }
@@ -208,6 +261,14 @@ func (s *Sensor) Children() []ASTNode {
 
 func (s *Sensor) Clone() ASTNode {
 	return &Sensor{sensorType: s.sensorType}
+}
+
+func (s *Sensor) ReplaceChild(oldChild, newChild ASTNode) error {
+	return fmt.Errorf("Sensor node does not have children")
+}
+
+func (s *Sensor) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("Sensor %v cannot remove child %v", s, child)
 }
 
 func (s *Sensor) isExpression() {
@@ -246,6 +307,20 @@ func (ds *DirectedSensor) Children() []ASTNode {
 
 func (ds *DirectedSensor) Clone() ASTNode {
 	return &DirectedSensor{Sensor: ds.Sensor, operand: ds.operand.Clone().(Expression)}
+}
+
+func (ds *DirectedSensor) ReplaceChild(oldChild, newChild ASTNode) error {
+	newExp, isExp := newChild.(Expression)
+	if !isExp {
+		return fmt.Errorf("newChild is %T, does not implement Expression", newChild)
+	}
+
+	if ds.operand == oldChild {
+		ds.operand = newExp
+		return nil
+	} else {
+		return fmt.Errorf("oldChild %v not found in ds %v", oldChild, ds)
+	}
 }
 
 func (ds *DirectedSensor) isExpression() {

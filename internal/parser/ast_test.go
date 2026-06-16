@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAbstractSyntaxTree_GetNodesOfType(t *testing.T) {
+func TestAbstractSyntaxTree_GetNodesByType(t *testing.T) {
 	source := "1 = 1 --> mem[1] := 2 eat;"
 
 	lexer := NewLexer(source)
@@ -19,7 +19,7 @@ func TestAbstractSyntaxTree_GetNodesOfType(t *testing.T) {
 	}
 
 	ast := NewAbstractSyntaxTree(program)
-	numberNodes := GetNodesOfType[*Number](&ast)
+	numberNodes := GetNodesByType[*Number](&ast)
 
 	// Should have four *Number nodes: '1', '1', '1', and '2'
 	if len(numberNodes) != 4 {
@@ -30,7 +30,7 @@ func TestAbstractSyntaxTree_GetNodesOfType(t *testing.T) {
 			numberNodes[0].value, numberNodes[1].value, numberNodes[2].value, numberNodes[3].value)
 	}
 
-	memNodes := GetNodesOfType[*MemNode](&ast)
+	memNodes := GetNodesByType[*MemNode](&ast)
 	// Should have one
 	if len(memNodes) != 1 {
 		t.Errorf("Expected 1 *MemNode node, got %d", len(memNodes))
@@ -39,7 +39,7 @@ func TestAbstractSyntaxTree_GetNodesOfType(t *testing.T) {
 		t.Errorf("Expected node 'mem[1], got %s", memNodes[0].String())
 	}
 
-	booleanNodes := GetNodesOfType[BooleanOperator](&ast)
+	booleanNodes := GetNodesByType[BooleanOperator](&ast)
 	if len(booleanNodes) != 1 {
 		t.Errorf("Expected 1 BooleanOperator node, got %d", len(booleanNodes))
 	}

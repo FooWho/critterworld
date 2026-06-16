@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"slices"
 )
 
 type Rule struct {
@@ -39,6 +40,50 @@ func (r *Rule) Clone() ASTNode {
 		}
 	}
 	return rClone
+}
+
+func (r *Rule) ReplaceChild(oldChild, newChild ASTNode) error {
+	if r.condition == oldChild {
+		newCond, ok := newChild.(BooleanOperator)
+		if !ok {
+			return fmt.Errorf("expected BooleanOperator, got %T", newChild)
+		}
+		r.condition = newCond
+		return nil
+	}
+
+	for i, command := range r.commands {
+		if command == oldChild {
+			newCmd, ok := newChild.(Command)
+			if !ok {
+				return fmt.Errorf("expected Command, got %T", newChild)
+			}
+
+			if _, isAction := newCmd.(ActionInterface); isAction && i != len(r.commands)-1 {
+				return fmt.Errorf("an Action can only be the final command in a rule")
+			}
+
+			r.commands[i] = newCmd
+			return nil
+		}
+	}
+	return fmt.Errorf("oldChild not found in Rule")
+}
+
+func (r *Rule) RemoveChild(child ASTNode) error {
+	if r.condition == child {
+		return fmt.Errorf("Rule %v cannot remove condition %v", r, r.condition)
+	}
+	if len(r.commands) == 1 {
+		return fmt.Errorf("rule %v cannot remove only command")
+	}
+	for i, command := range r.commands {
+		if command == child {
+			r.commands = slices.Delete(r.commands, i, i+1)
+			return nil
+		}
+	}
+	return fmt.Errorf("child %v not found in rule %v", child, r)
 }
 
 func (r *Rule) String() string {

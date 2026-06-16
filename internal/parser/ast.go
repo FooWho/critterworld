@@ -12,6 +12,8 @@ type ASTNode interface {
 	fmt.Stringer
 	Children() []ASTNode
 	Clone() ASTNode
+	ReplaceChild(oldChild, newChild ASTNode) error
+	RemoveChild(child ASTNode) error
 	isASTNode()
 }
 
@@ -43,7 +45,7 @@ func (ast *AbstractSyntaxTree) GetNodes() []ASTNode {
 	return nodes
 }
 
-func GetNodesOfType[T ASTNode](ast *AbstractSyntaxTree) []T {
+func GetNodesByType[T ASTNode](ast *AbstractSyntaxTree) []T {
 	var matchedNodes []T
 	for _, node := range ast.GetNodes() {
 		if match, ok := node.(T); ok {
@@ -51,4 +53,27 @@ func GetNodesOfType[T ASTNode](ast *AbstractSyntaxTree) []T {
 		}
 	}
 	return matchedNodes
+}
+
+func (ast *AbstractSyntaxTree) GetParentOf(target ASTNode) ASTNode {
+	if target == ast.rootNode {
+		return nil
+	}
+
+	var find func(current, parent ASTNode) ASTNode
+	find = func(current, parent ASTNode) ASTNode {
+		if current == target {
+			return parent
+		}
+		for _, child := range current.Children() {
+			if child != nil {
+				if p := find(child, current); p != nil {
+					return p
+				}
+			}
+		}
+		return nil
+	}
+
+	return find(ast.rootNode, nil)
 }

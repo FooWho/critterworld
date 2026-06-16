@@ -51,17 +51,22 @@ func (p *Program) isASTNode() {
 
 }
 
-func (p *Program) ReplaceChild(oldChild *Rule, newChild *Rule) error {
+func (p *Program) ReplaceChild(oldChild, newChild ASTNode) error {
+	newRule, ok := newChild.(*Rule)
+	if !ok {
+		return fmt.Errorf("Program can only contain *Rule nodes, got %T", newChild)
+	}
+
 	for i, rule := range p.rules {
 		if rule == oldChild {
-			p.rules[i] = newChild
+			p.rules[i] = newRule
 			return nil
 		}
 	}
-	return fmt.Errorf("rule was not located in program: %v", *oldChild)
+	return fmt.Errorf("oldChild not found in Program")
 }
 
-func (p *Program) RemoveChild(child *Rule) error {
+func (p *Program) RemoveChild(child ASTNode) error {
 	if len(p.rules) == 1 {
 		return fmt.Errorf("Unable to remove %v for %v", child, *p)
 	}
