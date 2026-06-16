@@ -149,7 +149,7 @@ func (uo *UnaryOperator) Clone() ASTNode {
 func (uo *UnaryOperator) ReplaceChild(oldChild, newChild ASTNode) error {
 	newExp, isExp := newChild.(Expression)
 	if !isExp {
-		return fmt.Errorf("newChild is %T, does not implement Expression")
+		return fmt.Errorf("newChild is %T, does not implement Expression", newChild)
 	}
 	if uo.operand == oldChild {
 		uo.operand = newExp
@@ -373,9 +373,13 @@ func (ds *DirectedSensor) ReplaceChild(oldChild, newChild ASTNode) error {
 }
 
 func (ds *DirectedSensor) Transform(newValue any) error {
-	return fmt.Errorf("DirectedSensor cannot be transformed")
+	strVal, strOk := newValue.(string)
+	if !strOk {
+		return fmt.Errorf("DirectedSensor node requires newValue of type string, got %T", newValue)
+	}
+	//if strVal == token.tAhead ||
+	return nil
 }
-
 func (ds *DirectedSensor) isExpression() {
 
 }

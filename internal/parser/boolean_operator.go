@@ -95,7 +95,7 @@ func (lo *LogicalOperator) Transform(newValue any) error {
 func (lo *LogicalOperator) ReplaceChild(oldChild, newChild ASTNode) error {
 	newBoolOp, isBoolOp := newChild.(BooleanOperator)
 	if !isBoolOp {
-		fmt.Errorf("newChild is type %T, does not implement BooleanOperator")
+		return fmt.Errorf("newChild is type %T, does not implement BooleanOperator", newChild)
 	}
 	if lo.leftOperand == oldChild {
 		lo.leftOperand = newBoolOp
@@ -175,7 +175,7 @@ func (ro *RelationalOperator) SwapChildren(firstChild, secondChild ASTNode) erro
 func (ro *RelationalOperator) ReplaceChild(oldChild, newChild ASTNode) error {
 	newExp, isExp := newChild.(Expression)
 	if !isExp {
-		fmt.Errorf("newChild is type %T, does not implement Expression")
+		return fmt.Errorf("newChild is type %T, does not implement Expression", newChild)
 	}
 	if ro.leftOperand == oldChild {
 		ro.leftOperand = newExp
