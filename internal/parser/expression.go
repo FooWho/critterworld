@@ -74,10 +74,22 @@ func (bo *BinaryOperator) breakingPrecedence(operand Expression) bool {
 	return false
 }
 
+func (bo *BinaryOperator) SwapChildren(firstChild, secondChild ASTNode) error {
+	bo.SwapOperands()
+	return nil
+}
+
 func (bo *BinaryOperator) SwapOperands() {
-	tmp := bo.leftOperand
-	bo.leftOperand = bo.rightOperand
-	bo.rightOperand = tmp
+	bo.leftOperand, bo.rightOperand = bo.rightOperand, bo.leftOperand
+}
+
+func (bo *BinaryOperator) Transform(newValue any) error {
+	newOperator, ok := newValue.(LexedToken)
+	if !ok {
+		return fmt.Errorf("expected LexedToken, got %T", newValue)
+	}
+	bo.operator = newOperator
+	return nil
 }
 
 func (bo *BinaryOperator) ReplaceChild(oldChild, newChild ASTNode) error {
@@ -151,6 +163,14 @@ func (uo *UnaryOperator) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("UnaryOperator %v cannot remove child %v", uo, child)
 }
 
+func (uo *UnaryOperator) SwapChildren(firstChild, secondChild ASTNode) error {
+	return fmt.Errorf("UnaryOperator cannot swap children")
+}
+
+func (uo *UnaryOperator) Transform(newValue any) error {
+	return fmt.Errorf("UnaryOperator cannot be transformed")
+}
+
 func (uo *UnaryOperator) isExpression() {
 }
 
@@ -187,6 +207,14 @@ func (mn *MemNode) ReplaceChild(oldChild, newChild ASTNode) error {
 
 func (mn *MemNode) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("MemNode %v cannot remove operand %v", mn, child)
+}
+
+func (mn *MemNode) SwapChildren(firstChild, secondChild ASTNode) error {
+	return fmt.Errorf("MemNode cannot swap children")
+}
+
+func (mn *MemNode) Transform(newValue any) error {
+	return fmt.Errorf("MemNode cannot be transformed")
 }
 
 func (mn *MemNode) isExpression() {
@@ -231,6 +259,19 @@ func (n *Number) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("Number %v cannot remove child %v", n, child)
 }
 
+func (n *Number) SwapChildren(firstChild, secondChild ASTNode) error {
+	return fmt.Errorf("Number cannot swap children")
+}
+
+func (n *Number) Transform(newValue any) error {
+	newVal, ok := newValue.(int)
+	if !ok {
+		return fmt.Errorf("expected int, got %T", newValue)
+	}
+	n.value = newVal
+	return nil
+}
+
 func (n *Number) isExpression() {
 
 }
@@ -269,6 +310,14 @@ func (s *Sensor) ReplaceChild(oldChild, newChild ASTNode) error {
 
 func (s *Sensor) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("Sensor %v cannot remove child %v", s, child)
+}
+
+func (s *Sensor) SwapChildren(firstChild, secondChild ASTNode) error {
+	return fmt.Errorf("Sensor cannot swap children")
+}
+
+func (s *Sensor) Transform(newValue any) error {
+	return fmt.Errorf("Sensor cannot be transformed")
 }
 
 func (s *Sensor) isExpression() {
@@ -321,6 +370,10 @@ func (ds *DirectedSensor) ReplaceChild(oldChild, newChild ASTNode) error {
 	} else {
 		return fmt.Errorf("oldChild %v not found in ds %v", oldChild, ds)
 	}
+}
+
+func (ds *DirectedSensor) Transform(newValue any) error {
+	return fmt.Errorf("DirectedSensor cannot be transformed")
 }
 
 func (ds *DirectedSensor) isExpression() {

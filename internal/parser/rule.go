@@ -86,6 +86,14 @@ func (r *Rule) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("child %v not found in rule %v", child, r)
 }
 
+func (r *Rule) SwapChildren(firstChild, secondChild ASTNode) error {
+	return nil
+}
+
+func (r *Rule) Transform(newValue any) error {
+	return fmt.Errorf("Rule cannot be transformed")
+}
+
 func (r *Rule) String() string {
 	var str string
 	str = fmt.Sprintf("%s --> \n", r.condition)

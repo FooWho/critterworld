@@ -6,7 +6,7 @@ import (
 
 type BooleanOperator interface {
 	ASTNode
-	SwapOperands()
+	swapOperands()
 	isBooleanOperator()
 }
 type LogicalOperator struct {
@@ -74,10 +74,22 @@ func (lo *LogicalOperator) breakingPrecedence(operand BooleanOperator) bool {
 	return false
 }
 
-func (lo *LogicalOperator) SwapOperands() {
-	tmp := lo.leftOperand
-	lo.leftOperand = lo.rightOperand
-	lo.rightOperand = tmp
+func (lo *LogicalOperator) SwapChildren(firstChild, secondChild ASTNode) error {
+	lo.swapOperands()
+	return nil
+}
+
+func (lo *LogicalOperator) swapOperands() {
+	lo.leftOperand, lo.rightOperand = lo.rightOperand, lo.leftOperand
+}
+
+func (lo *LogicalOperator) Transform(newValue any) error {
+	newOperator, ok := newValue.(LexedToken)
+	if !ok {
+		return fmt.Errorf("expected LexedToken, got %T", newValue)
+	}
+	lo.operator = newOperator
+	return nil
 }
 
 func (lo *LogicalOperator) ReplaceChild(oldChild, newChild ASTNode) error {
@@ -140,10 +152,24 @@ func (ro *RelationalOperator) String() string {
 	return fmt.Sprintf("%s %s %s", ro.leftOperand, ro.operator, ro.rightOperand)
 }
 
-func (ro *RelationalOperator) SwapOperands() {
-	tmp := ro.leftOperand
-	ro.leftOperand = ro.rightOperand
-	ro.rightOperand = tmp
+func (ro *RelationalOperator) swapOperands() {
+	ro.leftOperand, ro.rightOperand = ro.rightOperand, ro.leftOperand
+}
+
+// Transform changes the operator of the RelationalOperator in-place.
+// This is a non-structural, "value-only" transform.
+func (ro *RelationalOperator) Transform(newValue any) error {
+	newOperator, ok := newValue.(LexedToken)
+	if !ok {
+		return fmt.Errorf("expected LexedToken, got %T", newValue)
+	}
+	ro.operator = newOperator
+	return nil
+}
+
+func (ro *RelationalOperator) SwapChildren(firstChild, secondChild ASTNode) error {
+	ro.swapOperands()
+	return nil
 }
 
 func (ro *RelationalOperator) ReplaceChild(oldChild, newChild ASTNode) error {

@@ -79,18 +79,26 @@ func (p *Program) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("rule was not located in program: %v", child)
 }
 
-func (p *Program) SwapChildren(first *Rule, second *Rule) error {
+func (p *Program) SwapChildren(firstChild, secondChild ASTNode) error {
+	firstRule, firstOk := firstChild.(*Rule)
+	if !firstOk {
+		return fmt.Errorf("firstChild %v is of type %T", firstChild, firstChild)
+	}
+	secondRule, secondOk := secondChild.(*Rule)
+	if !secondOk {
+		return fmt.Errorf("secondChild %v is of type %T", secondChild, secondChild)
+	}
 	firstLocation := -1
 	secondLocation := -1
 
 	for i, rule := range p.rules {
-		if rule == first {
+		if rule == firstRule {
 			firstLocation = i
 			if secondLocation >= 0 {
 				break
 			}
 		}
-		if rule == second {
+		if rule == secondRule {
 			secondLocation = i
 			if firstLocation >= 0 {
 				break
@@ -98,17 +106,10 @@ func (p *Program) SwapChildren(first *Rule, second *Rule) error {
 		}
 	}
 	if firstLocation >= 0 && secondLocation >= 0 {
-		if firstLocation < secondLocation {
-			p.rules = slices.Delete(p.rules, firstLocation, firstLocation+1)
-			p.rules = slices.Delete(p.rules, secondLocation-1, secondLocation)
-			return nil
-		} else {
-			p.rules = slices.Delete(p.rules, secondLocation, secondLocation+1)
-			p.rules = slices.Delete(p.rules, firstLocation-1, firstLocation)
-			return nil
-		}
+		p.rules[firstLocation], p.rules[secondLocation] = p.rules[secondLocation], p.rules[firstLocation]
+		return nil
 	}
-	return fmt.Errorf("unable to swap rule %v and rule %v", first, second)
+	return fmt.Errorf("unable to swap rule %v and rule %v", firstChild, secondChild)
 }
 
 func (p *Program) InsertChild(child *Rule, location int) error {
@@ -117,6 +118,10 @@ func (p *Program) InsertChild(child *Rule, location int) error {
 	}
 	p.rules = slices.Insert(p.rules, location, child)
 	return nil
+}
+
+func (p *Program) Transform(newValue any) error {
+	return fmt.Errorf("Program cannot be transformed")
 }
 
 // Interface guard

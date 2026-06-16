@@ -12,8 +12,10 @@ type ASTNode interface {
 	fmt.Stringer
 	Children() []ASTNode
 	Clone() ASTNode
-	ReplaceChild(oldChild, newChild ASTNode) error
 	RemoveChild(child ASTNode) error
+	SwapChildren(firstChild, secondChild ASTNode) error
+	ReplaceChild(oldChild, newChild ASTNode) error
+	Transform(newValue any) error
 	isASTNode()
 }
 

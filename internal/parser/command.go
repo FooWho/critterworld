@@ -72,6 +72,24 @@ func (u *Update) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("Update node %v cannot remove child %v", u, child)
 }
 
+func (u *Update) SwapChildren(firstChild, secondChild ASTNode) error {
+	sourceMemNode, ok := u.source.(*MemNode)
+	if !ok {
+		return fmt.Errorf("destination and source must both be MemNode for Update to swap children")
+	}
+
+	if (u.source == firstChild && u.destination == secondChild) || (u.source == secondChild && u.destination == firstChild) {
+		u.source, u.destination = u.destination, sourceMemNode
+		return nil
+	} else {
+		return fmt.Errorf("children not located in update")
+	}
+}
+
+func (u *Update) Transform(newValue any) error {
+	return fmt.Errorf("Update cannot be transformed")
+}
+
 func (u *Update) isCommand() {
 }
 
@@ -111,6 +129,19 @@ func (act *Action) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("Action %v cannot remove child %v", act, child)
 }
 
+func (act *Action) SwapChildren(firstChild, secondChild ASTNode) error {
+	return fmt.Errorf(("Action cannot swap children"))
+}
+
+func (act *Action) Transform(newValue any) error {
+	newAction, ok := newValue.(LexedToken)
+	if !ok {
+		return fmt.Errorf("expected LexedToken, got %T", newValue)
+	}
+	act.actionType = newAction
+	return nil
+}
+
 func (act *Action) String() string {
 	return fmt.Sprintf("%s", act.actionType.Lexeme)
 }
@@ -145,6 +176,10 @@ func (act *ServeAction) Children() []ASTNode {
 
 func (act *ServeAction) Clone() ASTNode {
 	return &ServeAction{Action: Action{actionType: act.actionType}, operand: act.operand.Clone().(Expression)}
+}
+
+func (act *ServeAction) Transform(newValue any) error {
+	return fmt.Errorf("ServeAction cannot be transformed in-place (structural change required)")
 }
 
 func (act *ServeAction) isCommand() {
