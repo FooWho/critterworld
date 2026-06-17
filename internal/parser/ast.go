@@ -16,6 +16,7 @@ type ASTNode interface {
 	SwapChildren(firstChild, secondChild ASTNode) error
 	ReplaceChild(oldChild, newChild ASTNode) error
 	Transform(newValue any) error
+	InsertChild(child ASTNode, location int) error
 	isASTNode()
 }
 

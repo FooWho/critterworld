@@ -112,11 +112,15 @@ func (p *Program) SwapChildren(firstChild, secondChild ASTNode) error {
 	return fmt.Errorf("unable to swap rule %v and rule %v", firstChild, secondChild)
 }
 
-func (p *Program) InsertChild(child *Rule, location int) error {
-	if location > len(p.rules) {
-		return fmt.Errorf("unable to insert %v at %d", child, location)
+func (p *Program) InsertChild(child ASTNode, location int) error {
+	childRule, ok := child.(*Rule)
+	if !ok {
+		return fmt.Errorf("child needs to be type *Rule, got type %T", child)
 	}
-	p.rules = slices.Insert(p.rules, location, child)
+	if location > len(p.rules) {
+		return fmt.Errorf("unable to insert %v at %d", childRule, location)
+	}
+	p.rules = slices.Insert(p.rules, location, childRule)
 	return nil
 }
 

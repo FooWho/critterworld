@@ -373,12 +373,15 @@ func (ds *DirectedSensor) ReplaceChild(oldChild, newChild ASTNode) error {
 }
 
 func (ds *DirectedSensor) Transform(newValue any) error {
-	strVal, strOk := newValue.(string)
-	if !strOk {
-		return fmt.Errorf("DirectedSensor node requires newValue of type string, got %T", newValue)
+	newToken, ok := newValue.(LexedToken)
+	if !ok {
+		return fmt.Errorf("DirectedSensor node requires newValue of type LexedToken, got %T", newValue)
 	}
-	//if strVal == token.tAhead ||
-	return nil
+	if newToken.TokenType == tAhead || newToken.TokenType == tNearby || newToken.TokenType == tRandom {
+		ds.sensorType = newToken.Lexeme
+		return nil
+	}
+	return fmt.Errorf("invalid token for DirectedSensor: %v", newToken.TokenType)
 }
 func (ds *DirectedSensor) isExpression() {
 

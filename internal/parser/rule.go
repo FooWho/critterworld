@@ -87,11 +87,75 @@ func (r *Rule) RemoveChild(child ASTNode) error {
 }
 
 func (r *Rule) SwapChildren(firstChild, secondChild ASTNode) error {
-	return nil
+	firstCommand, commandOk := firstChild.(Command)
+	if !commandOk {
+		return fmt.Errorf("children for swap must be commands, got %T", firstChild)
+	}
+	secondCommand, commandOk := secondChild.(Command)
+	if !commandOk {
+		return fmt.Errorf("children for swap must be commands, got %T", secondChild)
+	}
+	if _, ok := firstChild.(ActionInterface); ok {
+		return fmt.Errorf("an Action can only be the final command in a rule")
+	}
+	if _, ok := secondChild.(ActionInterface); ok {
+		return fmt.Errorf("an Action can only be the final command in a rule")
+	}
+	firstLocation, secondLocation := -1, -1
+	for i, command := range r.commands {
+		if command == firstCommand {
+			firstLocation = i
+			if secondLocation >= 0 {
+				break
+			}
+		} else if command == secondCommand {
+			secondLocation = i
+			if firstLocation >= 0 {
+				break
+			}
+		}
+	}
+	if firstLocation >= 0 && secondLocation >= 0 {
+		r.commands[firstLocation], r.commands[secondLocation] = r.commands[secondLocation], r.commands[firstLocation]
+		return nil
+	}
+	return fmt.Errorf("children not located for swap")
 }
 
 func (r *Rule) Transform(newValue any) error {
 	return fmt.Errorf("Rule cannot be transformed")
+}
+
+func (r *Rule) InsertChild(child ASTNode, location int) error {
+	command, ok := child.(Command)
+	if !ok {
+		return fmt.Errorf("child to insert must implement Command, got type %T", child)
+	}
+
+	if location < 0 || location > len(r.commands) {
+		return fmt.Errorf("location %d is out of bounds", location)
+	}
+
+	hasExistingAction := false
+	if len(r.commands) > 0 {
+		if _, ok := r.commands[len(r.commands)-1].(ActionInterface); ok {
+			hasExistingAction = true
+		}
+	}
+
+	if _, isNewAction := command.(ActionInterface); isNewAction {
+		if location != len(r.commands) {
+			return fmt.Errorf("Action must be final command")
+		}
+		if hasExistingAction {
+			return fmt.Errorf("Command can have only one Action")
+		}
+	} else if hasExistingAction && location == len(r.commands) {
+		return fmt.Errorf("cannot insert a new command after final Action")
+	}
+
+	r.commands = slices.Insert(r.commands, location, command)
+	return nil
 }
 
 func (r *Rule) String() string {
