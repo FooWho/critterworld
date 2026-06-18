@@ -75,8 +75,12 @@ func (lo *LogicalOperator) breakingPrecedence(operand BooleanOperator) bool {
 }
 
 func (lo *LogicalOperator) SwapChildren(firstChild, secondChild ASTNode) error {
-	lo.swapOperands()
-	return nil
+	if (firstChild == lo.leftOperand || firstChild == lo.rightOperand) && (secondChild == lo.leftOperand || secondChild == lo.rightOperand) {
+		lo.swapOperands()
+		return nil
+	}
+	return fmt.Errorf("children not located in LogicalOperator")
+
 }
 
 func (lo *LogicalOperator) swapOperands() {
@@ -110,6 +114,10 @@ func (lo *LogicalOperator) ReplaceChild(oldChild, newChild ASTNode) error {
 
 func (lo *LogicalOperator) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("LogicalOperator %v cannot remove child %v", lo, child)
+}
+
+func (lo *LogicalOperator) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("LogicalOperator cannor perform insert child operation")
 }
 
 // Interface guard
@@ -156,8 +164,6 @@ func (ro *RelationalOperator) swapOperands() {
 	ro.leftOperand, ro.rightOperand = ro.rightOperand, ro.leftOperand
 }
 
-// Transform changes the operator of the RelationalOperator in-place.
-// This is a non-structural, "value-only" transform.
 func (ro *RelationalOperator) Transform(newValue any) error {
 	newOperator, ok := newValue.(LexedToken)
 	if !ok {
@@ -168,8 +174,12 @@ func (ro *RelationalOperator) Transform(newValue any) error {
 }
 
 func (ro *RelationalOperator) SwapChildren(firstChild, secondChild ASTNode) error {
-	ro.swapOperands()
-	return nil
+	if (firstChild == ro.leftOperand || firstChild == ro.rightOperand) && (secondChild == ro.leftOperand || secondChild == ro.rightOperand) {
+		ro.swapOperands()
+		return nil
+	}
+	return fmt.Errorf("children not located in RelationalOperator")
+
 }
 
 func (ro *RelationalOperator) ReplaceChild(oldChild, newChild ASTNode) error {
@@ -190,6 +200,10 @@ func (ro *RelationalOperator) ReplaceChild(oldChild, newChild ASTNode) error {
 
 func (ro *RelationalOperator) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("RelationalOperator %v cannot remove child %v", ro, child)
+}
+
+func (ro *RelationalOperator) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("RelationalOperator cannot perform insert child operation")
 }
 
 func (ro *RelationalOperator) isBooleanOperator() {

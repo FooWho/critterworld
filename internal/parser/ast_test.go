@@ -48,3 +48,47 @@ func TestAbstractSyntaxTree_GetNodesByType(t *testing.T) {
 	}
 
 }
+
+func TestAbstractSyntaxTree_GetParentOf(t *testing.T) {
+	source := "1 = 1 --> mem[1] := 2 eat;"
+
+	lexer := NewLexer(source)
+	tokens, err := lexer.Tokenize()
+	if err != nil {
+		t.Fatalf("Unable to tokenize source: %v", err)
+	}
+	parser := NewParser(tokens)
+	program, err := parser.Parse()
+	if err != nil {
+		t.Fatalf("Unable to parse source: %v", err)
+	}
+
+	ast := NewAbstractSyntaxTree(program)
+
+	rules := GetNodesByType[*Rule](&ast)
+	if len(rules) == 0 {
+		t.Fatal("Expected at least one rule")
+	}
+	rule := rules[0]
+
+	parent := ast.GetParentOf(rule)
+	if parent != program {
+		t.Errorf("Expected parent of Rule to be Program, got %T", parent)
+	}
+
+	actions := GetNodesByType[*Action](&ast)
+	if len(actions) == 0 {
+		t.Fatal("Expected at least one action")
+	}
+	action := actions[0]
+
+	parent = ast.GetParentOf(action)
+	if parent != rule {
+		t.Errorf("Expected parent of Action to be Rule, got %T", parent)
+	}
+
+	parent = ast.GetParentOf(program)
+	if parent != nil {
+		t.Errorf("Expected parent of Program to be nil, got %T", parent)
+	}
+}

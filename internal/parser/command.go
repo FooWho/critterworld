@@ -45,6 +45,24 @@ func (u *Update) String() string {
 	return fmt.Sprintf("%s := %s", u.destination, u.source)
 }
 
+func (u *Update) RemoveChild(child ASTNode) error {
+	return fmt.Errorf("Update node %v cannot remove child %v", u, child)
+}
+
+func (u *Update) SwapChildren(firstChild, secondChild ASTNode) error {
+	sourceMemNode, ok := u.source.(*MemNode)
+	if !ok {
+		return fmt.Errorf("destination and source must both be MemNode for Update to swap children")
+	}
+
+	if (u.source == firstChild && u.destination == secondChild) || (u.source == secondChild && u.destination == firstChild) {
+		u.source, u.destination = u.destination, sourceMemNode
+		return nil
+	} else {
+		return fmt.Errorf("children not located in update")
+	}
+}
+
 func (u *Update) ReplaceChild(oldChild, newChild ASTNode) error {
 	newDest, isMemNode := newChild.(*MemNode)
 	if isMemNode {
@@ -65,29 +83,15 @@ func (u *Update) ReplaceChild(oldChild, newChild ASTNode) error {
 		}
 	}
 
-	return fmt.Errorf(("newChild is %T, not MemNode or Expression"))
-}
-
-func (u *Update) RemoveChild(child ASTNode) error {
-	return fmt.Errorf("Update node %v cannot remove child %v", u, child)
-}
-
-func (u *Update) SwapChildren(firstChild, secondChild ASTNode) error {
-	sourceMemNode, ok := u.source.(*MemNode)
-	if !ok {
-		return fmt.Errorf("destination and source must both be MemNode for Update to swap children")
-	}
-
-	if (u.source == firstChild && u.destination == secondChild) || (u.source == secondChild && u.destination == firstChild) {
-		u.source, u.destination = u.destination, sourceMemNode
-		return nil
-	} else {
-		return fmt.Errorf("children not located in update")
-	}
+	return fmt.Errorf("newChild is %T, not MemNode or Expression", newChild)
 }
 
 func (u *Update) Transform(newValue any) error {
 	return fmt.Errorf("Update cannot be transformed")
+}
+
+func (u *Update) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("Insert node cannot perform insert child operation")
 }
 
 func (u *Update) isCommand() {
@@ -140,6 +144,10 @@ func (act *Action) Transform(newValue any) error {
 	}
 	act.actionType = newAction
 	return nil
+}
+
+func (act *Action) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("Action node cannot perform insert child operation")
 }
 
 func (act *Action) String() string {

@@ -75,7 +75,7 @@ func (r *Rule) RemoveChild(child ASTNode) error {
 		return fmt.Errorf("Rule %v cannot remove condition %v", r, r.condition)
 	}
 	if len(r.commands) == 1 {
-		return fmt.Errorf("rule %v cannot remove only command")
+		return fmt.Errorf("rule %v cannot remove only command", r)
 	}
 	for i, command := range r.commands {
 		if command == child {

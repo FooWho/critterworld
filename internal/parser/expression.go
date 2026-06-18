@@ -112,6 +112,10 @@ func (bo *BinaryOperator) RemoveChild(child ASTNode) error {
 	return fmt.Errorf("bo %v cannot remove child %v", bo, child)
 }
 
+func (bo *BinaryOperator) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("BinaryOperator cannot perform insert child operation")
+}
+
 func (bo *BinaryOperator) isASTNode() {
 
 }
@@ -171,6 +175,10 @@ func (uo *UnaryOperator) Transform(newValue any) error {
 	return fmt.Errorf("UnaryOperator cannot be transformed")
 }
 
+func (uo *UnaryOperator) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("UnararyOperator cannot perform insert child operation")
+}
+
 func (uo *UnaryOperator) isExpression() {
 }
 
@@ -215,6 +223,10 @@ func (mn *MemNode) SwapChildren(firstChild, secondChild ASTNode) error {
 
 func (mn *MemNode) Transform(newValue any) error {
 	return fmt.Errorf("MemNode cannot be transformed")
+}
+
+func (mn *MemNode) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("MemNode cannot perform insert child operation")
 }
 
 func (mn *MemNode) isExpression() {
@@ -272,6 +284,10 @@ func (n *Number) Transform(newValue any) error {
 	return nil
 }
 
+func (n *Number) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("Number cannot perform insert child operation")
+}
+
 func (n *Number) isExpression() {
 
 }
@@ -318,6 +334,10 @@ func (s *Sensor) SwapChildren(firstChild, secondChild ASTNode) error {
 
 func (s *Sensor) Transform(newValue any) error {
 	return fmt.Errorf("Sensor cannot be transformed")
+}
+
+func (s *Sensor) InsertChild(child ASTNode, location int) error {
+	return fmt.Errorf("Sensor cannot perform insert child operation")
 }
 
 func (s *Sensor) isExpression() {
