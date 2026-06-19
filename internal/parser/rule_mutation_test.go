@@ -27,6 +27,13 @@ func makeAction() *Action {
 	return &Action{actionType: LexedToken{TokenType: tEat, Lexeme: "eat"}}
 }
 
+func makeCloneableUpdate() *Update {
+	return &Update{
+		destination: &MemNode{operand: &Number{value: 0}},
+		source:      &Number{value: 1},
+	}
+}
+
 func makeCloneableRule(actionType Token, actionLexeme string) *Rule {
 	return &Rule{
 		condition: &RelationalOperator{
@@ -263,18 +270,88 @@ func TestRuleMutationSwap_ActionRemainsFinalAndCommandSetPreserved(t *testing.T)
 	}
 }
 
-func TestRuleMutationDuplicate_CurrentlyReturnsFalse(t *testing.T) {
-	rule := makeRule(&Update{}, &Update{})
-	m := NewMutator(NewAbstractSyntaxTree(&Program{rules: []*Rule{rule, makeRule(&Update{})}}))
+func TestRuleMutationDuplicate_NonRulePanics(t *testing.T) {
+	m := NewMutator(NewAbstractSyntaxTree(&Program{rules: []*Rule{makeCloneableRule(tEat, "eat")}}))
 
-	if m.ruleMutationDuplicate(FaultLocus{node: rule}) {
-		t.Fatalf("expected duplicate mutation to return false while unimplemented")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatalf("expected duplicate mutation to panic for non-rule locus node")
+		}
+	}()
+
+	_ = m.ruleMutationDuplicate(FaultLocus{parent: nil, node: &Update{}})
+}
+
+func TestRuleMutationDuplicate_OnlyActionNoInsert(t *testing.T) {
+	action := makeAction()
+	rule := makeRule(action)
+	m := NewMutator(NewAbstractSyntaxTree(&Program{rules: []*Rule{rule}}))
+
+	ok := m.ruleMutationDuplicate(FaultLocus{node: rule})
+	if ok {
+		t.Fatalf("expected duplicate mutation to return false when there are no non-action commands")
+	}
+	if len(rule.commands) != 1 || rule.commands[0] != action {
+		t.Fatalf("expected commands to remain unchanged when rule contains only an action")
+	}
+}
+
+func TestRuleMutationDuplicate_SingleUpdateInsertsClone(t *testing.T) {
+	update := makeCloneableUpdate()
+	rule := makeRule(update)
+	m := newMutatorWithRNG(NewAbstractSyntaxTree(&Program{rules: []*Rule{rule}}), rand.New(rand.NewSource(0)))
+
+	ok := m.ruleMutationDuplicate(FaultLocus{node: rule})
+	if !ok {
+		t.Fatalf("expected duplicate mutation to return true")
+	}
+	if len(rule.commands) != 2 {
+		t.Fatalf("expected one command to be cloned and inserted, got %d commands", len(rule.commands))
+	}
+	if rule.commands[0] != update {
+		t.Fatalf("expected original update to remain at position 0")
+	}
+	if rule.commands[1] == update {
+		t.Fatalf("expected inserted command to be a clone, not the original")
+	}
+}
+
+func TestRuleMutationDuplicate_InsertsCloneBeforeTrailingAction(t *testing.T) {
+	update := makeCloneableUpdate()
+	action := makeAction()
+	rule := makeRule(update, action)
+	m := newMutatorWithRNG(NewAbstractSyntaxTree(&Program{rules: []*Rule{rule}}), rand.New(rand.NewSource(0)))
+
+	ok := m.ruleMutationDuplicate(FaultLocus{node: rule})
+	if !ok {
+		t.Fatalf("expected duplicate mutation to return true")
+	}
+	if len(rule.commands) != 3 {
+		t.Fatalf("expected 3 commands after duplicate, got %d", len(rule.commands))
+	}
+	if _, isAction := rule.commands[len(rule.commands)-1].(ActionInterface); !isAction {
+		t.Fatalf("expected trailing command to remain an action after duplicate")
+	}
+	if rule.commands[0] != update {
+		t.Fatalf("expected original update to remain at position 0")
+	}
+	if rule.commands[1] == update {
+		t.Fatalf("expected inserted command to be a clone, not the original")
+	}
+}
+
+func TestRuleMutationDuplicate_AlwaysReturnsTrue(t *testing.T) {
+	rule := makeRule(makeCloneableUpdate(), makeCloneableUpdate())
+	m := newMutatorWithRNG(NewAbstractSyntaxTree(&Program{rules: []*Rule{rule}}), rand.New(rand.NewSource(0)))
+
+	if !m.ruleMutationDuplicate(FaultLocus{node: rule}) {
+		t.Fatalf("expected duplicate mutation to always return true")
 	}
 }
 
 func TestRuleFaultInjector_DoesNotPanicAndMaintainsNonEmptyProgram(t *testing.T) {
-	rule1 := makeRule(&Update{}, &Update{}, makeAction())
-	rule2 := makeRule(&Update{}, &Update{})
+	rule1 := makeRule(makeCloneableUpdate(), makeCloneableUpdate(), makeAction())
+	rule2 := makeRule(makeCloneableUpdate(), makeCloneableUpdate())
 	program := &Program{rules: []*Rule{rule1, rule2}}
 	m := newMutatorWithRNG(NewAbstractSyntaxTree(program), rand.New(rand.NewSource(3)))
 

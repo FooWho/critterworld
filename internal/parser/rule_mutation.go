@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"slices"
 )
 
 func (m *Mutator) ruleMutationRemove(locus FaultLocus) bool {
@@ -72,5 +73,23 @@ func (m *Mutator) ruleMutationReplace(locus FaultLocus) bool {
 }
 
 func (m *Mutator) ruleMutationDuplicate(locus FaultLocus) bool {
+	rule, ok := locus.node.(*Rule)
+	if !ok {
+		panic(fmt.Sprintf("critterworld: invariant violation: expected *Rule in (m *Mutator).ruleMutationDuplicate(), got %T", locus.node))
+	}
+
+	candidateCount := len(rule.commands)
+	if candidateCount < 1 {
+		return false
+	}
+	if _, isAction := rule.commands[candidateCount-1].(ActionInterface); isAction {
+		candidateCount--
+	}
+	if candidateCount > 0 {
+		candidate := rule.commands[m.rng.Intn(candidateCount)]
+		clone := candidate.Clone().(Command)
+		rule.commands = slices.Insert(rule.commands, candidateCount, clone)
+		return true
+	}
 	return false
 }
