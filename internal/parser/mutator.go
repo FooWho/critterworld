@@ -2,10 +2,16 @@ package parser
 
 import (
 	"math/rand"
+	"time"
 )
+
+type randomSource interface {
+	Intn(int) int
+}
 
 type Mutator struct {
 	ast AbstractSyntaxTree
+	rng randomSource
 }
 
 type FaultLocus struct {
@@ -38,12 +44,19 @@ const (
 )
 
 func NewMutator(ast AbstractSyntaxTree) *Mutator {
-	return &Mutator{ast: ast}
+	return &Mutator{ast: ast, rng: rand.New(rand.NewSource(time.Now().UnixNano()))}
+}
+
+func newMutatorWithRNG(ast AbstractSyntaxTree, rng randomSource) *Mutator {
+	if rng == nil {
+		panic("critterworld: invariant violation: rng cannot be nil in newMutatorWithRNG")
+	}
+	return &Mutator{ast: ast, rng: rng}
 }
 
 func (m *Mutator) GetFaultLocus() FaultLocus {
 	nodes := m.ast.GetNodes()
-	randomIndex := rand.Intn(len(nodes))
+	randomIndex := m.rng.Intn(len(nodes))
 	node := nodes[randomIndex]
 	parent := m.ast.GetParentOf(node)
 
@@ -53,7 +66,7 @@ func (m *Mutator) GetFaultLocus() FaultLocus {
 func (m *Mutator) ruleFaultInjector(locus FaultLocus) bool {
 	// Remove, Swap, Replace, Duplicate
 	ruleMutations := []mutations{mRemove, mSwap, mReplace, mDuplicate}
-	mutationType := ruleMutations[rand.Intn(len(ruleMutations))]
+	mutationType := ruleMutations[m.rng.Intn(len(ruleMutations))]
 	switch mutationType {
 	case mRemove:
 		return m.ruleMutationRemove(locus)

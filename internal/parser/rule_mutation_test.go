@@ -9,15 +9,15 @@ type stubNode struct {
 	children []ASTNode
 }
 
-func (s *stubNode) String() string                                 { return "stub" }
-func (s *stubNode) Children() []ASTNode                             { return s.children }
-func (s *stubNode) Clone() ASTNode                                  { return &stubNode{children: s.children} }
-func (s *stubNode) RemoveChild(child ASTNode) error                 { return nil }
+func (s *stubNode) String() string                                     { return "stub" }
+func (s *stubNode) Children() []ASTNode                                { return s.children }
+func (s *stubNode) Clone() ASTNode                                     { return &stubNode{children: s.children} }
+func (s *stubNode) RemoveChild(child ASTNode) error                    { return nil }
 func (s *stubNode) SwapChildren(firstChild, secondChild ASTNode) error { return nil }
-func (s *stubNode) ReplaceChild(oldChild, newChild ASTNode) error   { return nil }
-func (s *stubNode) Transform(newValue any) error                    { return nil }
-func (s *stubNode) InsertChild(child ASTNode, location int) error   { return nil }
-func (s *stubNode) isASTNode()                                       {}
+func (s *stubNode) ReplaceChild(oldChild, newChild ASTNode) error      { return nil }
+func (s *stubNode) Transform(newValue any) error                       { return nil }
+func (s *stubNode) InsertChild(child ASTNode, location int) error      { return nil }
+func (s *stubNode) isASTNode()                                         {}
 
 func makeRule(commands ...Command) *Rule {
 	return &Rule{condition: &RelationalOperator{}, commands: commands}
@@ -25,6 +25,17 @@ func makeRule(commands ...Command) *Rule {
 
 func makeAction() *Action {
 	return &Action{actionType: LexedToken{TokenType: tEat, Lexeme: "eat"}}
+}
+
+func makeCloneableRule(actionType Token, actionLexeme string) *Rule {
+	return &Rule{
+		condition: &RelationalOperator{
+			operator:     LexedToken{TokenType: tLess, Lexeme: "<"},
+			leftOperand:  &Number{value: 1},
+			rightOperand: &Number{value: 2},
+		},
+		commands: []Command{&Action{actionType: LexedToken{TokenType: actionType, Lexeme: actionLexeme}}},
+	}
 }
 
 func TestRuleMutationRemove_SingleRuleReturnsFalse(t *testing.T) {
@@ -75,12 +86,104 @@ func TestRuleMutationRemove_ParentRejectsNodeReturnsFalse(t *testing.T) {
 	}
 }
 
-func TestRuleMutationSwap_NonRuleReturnsFalse(t *testing.T) {
+func TestRuleMutationSwap_NonRulePanics(t *testing.T) {
 	m := NewMutator(NewAbstractSyntaxTree(&Program{rules: []*Rule{makeRule(&Update{})}}))
 
-	ok := m.ruleMutationSwap(FaultLocus{parent: nil, node: &Update{}})
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatalf("expected swap mutation to panic for non-rule locus node")
+		}
+	}()
+
+	_ = m.ruleMutationSwap(FaultLocus{parent: nil, node: &Update{}})
+}
+
+func TestRuleMutationReplace_NonRulePanics(t *testing.T) {
+	m := NewMutator(NewAbstractSyntaxTree(&Program{rules: []*Rule{makeRule(&Update{})}}))
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatalf("expected replace mutation to panic for non-rule locus node")
+		}
+	}()
+
+	_ = m.ruleMutationReplace(FaultLocus{parent: nil, node: &Update{}})
+}
+
+func TestRuleMutationReplace_NonProgramParentPanics(t *testing.T) {
+	rule := makeCloneableRule(tEat, "eat")
+	m := NewMutator(NewAbstractSyntaxTree(&Program{rules: []*Rule{rule}}))
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatalf("expected replace mutation to panic for non-program parent")
+		}
+	}()
+
+	_ = m.ruleMutationReplace(FaultLocus{parent: &stubNode{}, node: rule})
+}
+
+func TestRuleMutationReplace_SingleRuleReturnsFalse(t *testing.T) {
+	rule := makeCloneableRule(tEat, "eat")
+	program := &Program{rules: []*Rule{rule}}
+	m := NewMutator(NewAbstractSyntaxTree(program))
+
+	ok := m.ruleMutationReplace(FaultLocus{parent: program, node: rule})
 	if ok {
-		t.Fatalf("expected swap mutation to fail for non-rule locus node")
+		t.Fatalf("expected replace mutation to fail when there is only one rule")
+	}
+	if len(program.rules) != 1 || program.rules[0] != rule {
+		t.Fatalf("expected program rules to remain unchanged")
+	}
+}
+
+func TestRuleMutationReplace_TargetNotInParentReturnsFalse(t *testing.T) {
+	rule1 := makeCloneableRule(tEat, "eat")
+	rule2 := makeCloneableRule(tWait, "wait")
+	externalRule := makeCloneableRule(tGrow, "grow")
+	program := &Program{rules: []*Rule{rule1, rule2}}
+	m := NewMutator(NewAbstractSyntaxTree(program))
+
+	ok := m.ruleMutationReplace(FaultLocus{parent: program, node: externalRule})
+	if ok {
+		t.Fatalf("expected replace mutation to fail when target rule is not in parent")
+	}
+	if len(program.rules) != 2 || program.rules[0] != rule1 || program.rules[1] != rule2 {
+		t.Fatalf("expected program rules to remain unchanged")
+	}
+}
+
+func TestRuleMutationReplace_ReplacesWithCloneOfDifferentRule(t *testing.T) {
+	rule1 := makeCloneableRule(tEat, "eat")
+	rule2 := makeCloneableRule(tWait, "wait")
+	program := &Program{rules: []*Rule{rule1, rule2}}
+	m := NewMutator(NewAbstractSyntaxTree(program))
+
+	ok := m.ruleMutationReplace(FaultLocus{parent: program, node: rule1})
+	if !ok {
+		t.Fatalf("expected replace mutation to succeed with multiple rules")
+	}
+
+	replaced := program.rules[0]
+	if replaced == rule1 {
+		t.Fatalf("expected rule1 slot to be replaced")
+	}
+	if replaced == rule2 {
+		t.Fatalf("expected replacement to be a clone, not the original source rule")
+	}
+
+	replacedAction, ok := replaced.commands[0].(*Action)
+	if !ok {
+		t.Fatalf("expected cloned replacement rule to contain an Action command")
+	}
+	if replacedAction.actionType.Lexeme != "wait" {
+		t.Fatalf("expected cloned replacement rule to match source rule command")
+	}
+
+	sourceAction := rule2.commands[0].(*Action)
+	sourceAction.actionType = LexedToken{TokenType: tGrow, Lexeme: "grow"}
+	if replacedAction.actionType.Lexeme != "wait" {
+		t.Fatalf("expected replacement rule to be independent clone of source rule")
 	}
 }
 
@@ -114,7 +217,6 @@ func TestRuleMutationSwap_TwoUpdatesAlwaysSwap(t *testing.T) {
 	secondBefore := rule.commands[1]
 	m := NewMutator(NewAbstractSyntaxTree(&Program{rules: []*Rule{rule, makeRule(&Update{})}}))
 
-	rand.Seed(1)
 	ok := m.ruleMutationSwap(FaultLocus{node: rule})
 	if !ok {
 		t.Fatalf("expected swap mutation to succeed")
@@ -137,7 +239,6 @@ func TestRuleMutationSwap_ActionRemainsFinalAndCommandSetPreserved(t *testing.T)
 		seenBefore[cmd]++
 	}
 
-	rand.Seed(2)
 	ok := m.ruleMutationSwap(FaultLocus{node: rule})
 	if !ok {
 		t.Fatalf("expected swap mutation to succeed")
@@ -162,15 +263,11 @@ func TestRuleMutationSwap_ActionRemainsFinalAndCommandSetPreserved(t *testing.T)
 	}
 }
 
-func TestRuleMutationReplaceAndDuplicate_CurrentlyReturnFalse(t *testing.T) {
+func TestRuleMutationDuplicate_CurrentlyReturnsFalse(t *testing.T) {
 	rule := makeRule(&Update{}, &Update{})
 	m := NewMutator(NewAbstractSyntaxTree(&Program{rules: []*Rule{rule, makeRule(&Update{})}}))
-	locus := FaultLocus{node: rule}
 
-	if m.ruleMutationReplace(locus) {
-		t.Fatalf("expected replace mutation to return false while unimplemented")
-	}
-	if m.ruleMutationDuplicate(locus) {
+	if m.ruleMutationDuplicate(FaultLocus{node: rule}) {
 		t.Fatalf("expected duplicate mutation to return false while unimplemented")
 	}
 }
@@ -179,9 +276,8 @@ func TestRuleFaultInjector_DoesNotPanicAndMaintainsNonEmptyProgram(t *testing.T)
 	rule1 := makeRule(&Update{}, &Update{}, makeAction())
 	rule2 := makeRule(&Update{}, &Update{})
 	program := &Program{rules: []*Rule{rule1, rule2}}
-	m := NewMutator(NewAbstractSyntaxTree(program))
+	m := newMutatorWithRNG(NewAbstractSyntaxTree(program), rand.New(rand.NewSource(3)))
 
-	rand.Seed(3)
 	for i := 0; i < 50; i++ {
 		_ = m.ruleFaultInjector(FaultLocus{parent: program, node: program.rules[0]})
 		if len(program.rules) == 0 {
