@@ -63,6 +63,20 @@ func (m *Mutator) GetFaultLocus() FaultLocus {
 	return FaultLocus{parent: parent, node: node}
 }
 
+func (m *Mutator) programFaultInjector(locus FaultLocus) bool {
+	// Swap, Duplicate
+	programMutations := []mutations{mSwap, mDuplicate}
+	mutatationType := programMutations[m.rng.Intn(len(programMutations))]
+	switch mutatationType {
+	case mSwap:
+		return m.programMutationSwap(locus)
+	case mDuplicate:
+		return m.programMutationDuplicate(locus)
+	default:
+		return false
+	}
+}
+
 func (m *Mutator) ruleFaultInjector(locus FaultLocus) bool {
 	// Remove, Swap, Replace, Duplicate
 	ruleMutations := []mutations{mRemove, mSwap, mReplace, mDuplicate}
