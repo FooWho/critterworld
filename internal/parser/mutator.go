@@ -94,3 +94,19 @@ func (m *Mutator) ruleFaultInjector(locus FaultLocus) bool {
 		return false
 	}
 }
+
+func (m *Mutator) updateFaultInjector(locus FaultLocus) bool {
+	// Remove, Swap, Replace
+	updateMutations := []mutations{mRemove, mSwap, mReplace}
+	mutationType := updateMutations[m.rng.Intn(len(updateMutations))]
+	switch mutationType {
+	case mRemove:
+		return m.updateMutationRemove(locus)
+	case mSwap:
+		return m.updateMutationSwap(locus)
+	case mReplace:
+		return m.updateMutationReplace(locus)
+	default:
+		return false
+	}
+}

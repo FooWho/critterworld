@@ -40,7 +40,11 @@ func (m *Mutator) ruleMutationSwap(locus FaultLocus) bool {
 		loc2 = m.rng.Intn(swappableCount)
 	}
 
-	rule.commands[loc1], rule.commands[loc2] = rule.commands[loc2], rule.commands[loc1]
+	err := rule.SwapChildren(rule.commands[loc1], rule.commands[loc2])
+	if err != nil {
+		return false
+	}
+
 	return true
 }
 
@@ -62,14 +66,11 @@ func (m *Mutator) ruleMutationReplace(locus FaultLocus) bool {
 		loc = m.rng.Intn(replaceableCount)
 	}
 	clonedRule := program.rules[loc].Clone()
-	for i, rle := range program.rules {
-		if rle == rule {
-			*rule = Rule{}
-			program.rules[i] = clonedRule.(*Rule)
-			return true
-		}
+	err := program.ReplaceChild(rule, clonedRule)
+	if err != nil {
+		return false
 	}
-	return false
+	return true
 }
 
 func (m *Mutator) ruleMutationDuplicate(locus FaultLocus) bool {
