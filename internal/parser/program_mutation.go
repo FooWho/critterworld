@@ -16,6 +16,7 @@ func (m *Mutator) programMutationSwap(locus FaultLocus) bool {
 	firstLoc := m.rng.Intn(candidateCount)
 	secondLoc := m.rng.Intn(candidateCount)
 	for firstLoc == secondLoc {
+		firstLoc = m.rng.Intn(candidateCount)
 		secondLoc = m.rng.Intn(candidateCount)
 	}
 	err := program.SwapChildren(program.rules[firstLoc], program.rules[secondLoc])

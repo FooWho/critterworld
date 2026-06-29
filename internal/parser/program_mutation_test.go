@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -63,6 +64,8 @@ func TestProgramMutationSwap_ReRollsSameIndexAndSwaps(t *testing.T) {
 	rule2 := makeCloneableRule(tWait, "wait")
 	rule3 := makeCloneableRule(tGrow, "grow")
 	program := &Program{rules: []*Rule{rule1, rule2, rule3}}
+	var rule1str = fmt.Sprint(rule1)
+	fmt.Println(rule1str)
 
 	// Force initial equal picks (0,0), then distinct picks (2,1).
 	m := newMutatorWithRNG(NewAbstractSyntaxTree(program), &sequenceRNG{values: []int{0, 0, 2, 1}})
