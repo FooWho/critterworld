@@ -54,9 +54,13 @@ func (m *Mutator) updateMutationReplace(locus FaultLocus) bool {
 	if len(candidates) < 2 {
 		return false
 	}
-	for candidate := candidates[m.rng.Intn(len(candidates))]; candidate == node; {
-		candidate = m.
+	var candidate *Update
+	for candidate = candidates[m.rng.Intn(len(candidates))]; candidate == node; {
+		candidate = candidates[m.rng.Intn(len(candidates))]
 	}
-	
-	return false
+	err := parent.ReplaceChild(node, candidate)
+	if err != nil {
+		return false
+	}
+	return true
 }
